@@ -1,0 +1,25 @@
+{
+  "name": "boshpana",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Boshpana — O'zbekcha Bunker (Shelter) ijtimoiy stol o'yini platformasi (Telegram Mini App + Web)",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "dev:client": "npm run dev --workspace=@boshpana/client",
+    "dev:server": "npm run dev --workspace=@boshpana/server",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "keywords": [
+    "bunker",
+    "boshpana",
+    "telegram-mini-app",
+    "social-deduction",
+    "uzbek-game"
+  ],
+  "author": "Boshpana Team",
+  "license": "MIT"
+}
