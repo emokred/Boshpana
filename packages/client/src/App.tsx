@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { GameRoomState, CardCategory, RoomSettings } from '@boshpana/shared';
+import { GameRoomState, CardCategory } from '@boshpana/shared';
 import { useTelegram } from './hooks/useTelegram';
 import { LocalGameEngine } from './services/localGameEngine';
 import { JoinCreateView } from './components/lobby/JoinCreateView';
 import { LobbyView } from './components/lobby/LobbyView';
 import { GameBoardView } from './components/game/GameBoardView';
-import { sound } from './services/sound';
 
 export const App: React.FC = () => {
   const { tgUser, startParam, triggerHaptic } = useTelegram();
   const [engine, setEngine] = useState<LocalGameEngine | null>(null);
   const [roomState, setRoomState] = useState<GameRoomState | null>(null);
   const [myPlayerId, setMyPlayerId] = useState<string>('');
-
-  // Auto check URL query params (e.g. ?room=BOSH-123) or Telegram startParam
   const [initialRoomCode, setInitialRoomCode] = useState<string>('');
 
   useEffect(() => {
@@ -38,7 +35,6 @@ export const App: React.FC = () => {
 
   const handleJoinRoom = (roomCode: string, playerName: string) => {
     triggerHaptic('medium');
-    // In local engine demo, joins local room or creates instance
     const localEng = new LocalGameEngine(playerName, (newState) => {
       setRoomState(newState);
     });
@@ -97,6 +93,11 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleSkipPhase = () => {
+    triggerHaptic('medium');
+    engine?.skipCurrentPhase();
+  };
+
   const handlePlayAgain = () => {
     triggerHaptic('success');
     if (roomState) {
@@ -133,8 +134,10 @@ export const App: React.FC = () => {
           onSendChatMessage={handleSendChatMessage}
           onPauseToggle={() => engine?.toggleTimerPause()}
           onAdd30Sec={() => engine?.addTimerSeconds(30)}
+          onSkipPhase={handleSkipPhase}
           onStartRounds={handleStartRounds}
           onPlayAgain={handlePlayAgain}
+          onLeaveGame={handleLeaveRoom}
         />
       )}
     </div>

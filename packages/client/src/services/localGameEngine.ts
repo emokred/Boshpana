@@ -422,4 +422,17 @@ export class LocalGameEngine {
     this.state.phaseTimeRemainingSec += seconds;
     this.broadcast();
   }
+
+  public skipCurrentPhase() {
+    if (this.state.phase === 'DISASTER_INTRO') {
+      this.startRoundsFromIntro();
+    } else if (this.state.phase === 'ROUND_PITCH') {
+      this.startDebatePhase();
+    } else if (this.state.phase === 'ROUND_DEBATE') {
+      this.startVotingPhase();
+    } else if (this.state.phase === 'VOTING') {
+      this.resolveVoting();
+    }
+    this.broadcast();
+  }
 }

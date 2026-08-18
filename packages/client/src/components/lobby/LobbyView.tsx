@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { GameRoomState, DeckTheme, RoomSettings, VotingMode } from '@boshpana/shared';
+import { GameRoomState, DeckTheme, RoomSettings, CardCategory } from '@boshpana/shared';
+import { CARDS_DATA, CATASTROPHES } from '@boshpana/shared';
 import { 
   Users, Copy, Check, Play, Settings, Shield, Sparkles, 
-  Flame, Lock, Eye, CheckCircle2, Circle, AlertCircle, Share2
+  Flame, Lock, Eye, CheckCircle2, Circle, AlertCircle, Share2,
+  BookOpen, X, Layers
 } from 'lucide-react';
 import { sound } from '../../services/sound';
 
@@ -24,11 +26,14 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
   onLeaveRoom
 }) => {
   const [copied, setCopied] = useState(false);
+  const [showDeckBrowser, setShowDeckBrowser] = useState(false);
+  const [deckTab, setDeckTab] = useState<CardCategory | 'catastrophes'>('profession');
+
   const myPlayer = roomState.players[myPlayerId];
   const isHost = myPlayer?.isHost;
   const playersList = Object.values(roomState.players);
   const readyCount = playersList.filter((p) => p.isReady).length;
-  const canStart = playersList.length >= 3; // Min 3 players for good bunker game
+  const canStart = playersList.length >= 3;
 
   const handleCopyCode = () => {
     sound.playClick();
@@ -59,13 +64,21 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
     const current = roomState.settings.selectedDecks || ['classic'];
     let updated: DeckTheme[];
     if (current.includes(theme)) {
-      if (current.length === 1) return; // Must have at least 1 deck
+      if (current.length === 1) return;
       updated = current.filter((d) => d !== theme);
     } else {
       updated = [...current, theme];
     }
     onUpdateSettings({ selectedDecks: updated });
   };
+
+  // Filter cards based on active selected decks
+  const activeCards = CARDS_DATA.filter((c) =>
+    roomState.settings.selectedDecks.includes(c.theme)
+  );
+  const activeCatastrophes = CATASTROPHES.filter((c) =>
+    roomState.settings.selectedDecks.includes(c.theme)
+  );
 
   return (
     <div className="max-w-3xl mx-auto space-y-5 p-4 animate-fadeIn">
@@ -98,6 +111,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
           >
             <Share2 size={15} className="text-cyan-400" />
             <span>Havolani Ulashish</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { sound.playClick(); setShowDeckBrowser(true); }}
+            className="px-3.5 py-2.5 rounded-xl bg-bunker-800 hover:bg-bunker-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            title="To'plamdagi kartalarni ko'rish"
+          >
+            <Layers size={15} className="text-amber-400" />
+            <span>Kartalar</span>
           </button>
 
           {onLeaveRoom && (
@@ -183,7 +206,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
             })}
           </div>
 
-          {/* Ready Button for non-host or Host */}
+          {/* Ready Button */}
           <div className="pt-2">
             <button
               type="button"
@@ -212,7 +235,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
             </h3>
           </div>
 
-          {/* Voting Mode: Open vs Secret */}
+          {/* Voting Mode */}
           <div className="space-y-1.5">
             <label className="text-xs font-mono text-slate-400 block">
               Ovoz Berish Rejimi:
@@ -360,6 +383,99 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Deck Browser Modal */}
+      {showDeckBrowser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-bunker-900 border-2 border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Layers size={18} className="text-amber-400" />
+                <h3 className="text-sm sm:text-base font-black text-slate-100 uppercase">
+                  Faol To'plamdagi Kartalar Ro'yxati
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeckBrowser(false)}
+                className="p-1 rounded-lg bg-bunker-800 hover:bg-bunker-700 text-slate-300"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Category Sub-tabs */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 flex-shrink-0 text-xs">
+              {[
+                { id: 'profession', label: 'Kasblar' },
+                { id: 'biology', label: 'Biologiya' },
+                { id: 'health', label: 'Salomatlik' },
+                { id: 'baggage', label: 'Bagaj' },
+                { id: 'hobby', label: 'Xobbi' },
+                { id: 'fact', label: 'Faktlar' },
+                { id: 'special', label: 'Maxsus' },
+                { id: 'catastrophes', label: 'Falokatlar' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setDeckTab(tab.id as any)}
+                  className={`px-3 py-1.5 rounded-lg font-mono font-bold whitespace-nowrap transition-colors ${
+                    deckTab === tab.id
+                      ? 'bg-hazard-orange text-white'
+                      : 'bg-bunker-950 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Cards Scrollable Content */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {deckTab === 'catastrophes' ? (
+                activeCatastrophes.map((c) => (
+                  <div key={c.id} className="p-3 rounded-xl bg-bunker-950 border border-slate-800 space-y-1">
+                    <h4 className="font-bold text-xs sm:text-sm text-hazard-orange">{c.title}</h4>
+                    <p className="text-xs text-slate-300">{c.shortDesc}</p>
+                    <div className="flex gap-1 pt-1">
+                      {c.hazards.map((h, i) => (
+                        <span key={i} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-950 text-red-300">
+                          {h}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                activeCards
+                  .filter((c) => c.category === deckTab)
+                  .map((card) => (
+                    <div key={card.id} className="p-3 rounded-xl bg-bunker-950 border border-slate-800 space-y-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-xs sm:text-sm text-slate-100">{card.title}</span>
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-bunker-900 text-slate-400 border border-slate-800">
+                          {card.theme.toUpperCase()}
+                        </span>
+                      </div>
+                      {card.description && (
+                        <p className="text-xs text-slate-400">{card.description}</p>
+                      )}
+                    </div>
+                  ))
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowDeckBrowser(false)}
+              className="w-full py-2.5 rounded-xl bg-bunker-800 hover:bg-bunker-700 text-slate-200 text-xs font-bold uppercase flex-shrink-0"
+            >
+              Yopish
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Start Game Action for Host */}
       {isHost && (
