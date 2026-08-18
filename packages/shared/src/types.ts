@@ -16,6 +16,8 @@ export interface CardItem {
   description?: string;
   theme: DeckTheme;
   icon?: string;
+  disasterSpecificId?: string; // If tied to a specific catastrophe
+  artworkUrl?: string;
   impactScore?: {
     food?: number;      // -5 to +5
     medical?: number;   // -5 to +5
@@ -24,7 +26,7 @@ export interface CardItem {
     psychology?: number;// -5 to +5
   };
   specialAction?: {
-    type: 'cancel_vote' | 'swap_profession' | 'add_shelter_slot' | 'steal_baggage' | 'force_reveal' | 'extra_vote';
+    type: 'cancel_vote' | 'swap_profession' | 'add_shelter_slot' | 'steal_baggage' | 'force_reveal' | 'extra_vote' | 'heal_condition' | 'immunity';
     params?: Record<string, any>;
   };
 }
@@ -36,8 +38,24 @@ export interface Catastrophe {
   fullStory: string;
   theme: DeckTheme;
   requiredSkills: ('food' | 'medical' | 'tech' | 'defense' | 'psychology')[];
-  shelterMonths: number; // Duration required to stay inside (e.g. 12 to 120 months)
+  shelterMonths: number;
   hazards: string[];
+  exclusiveSpecialCardIds?: string[];
+}
+
+export interface BunkerEvent {
+  id: string;
+  title: string;
+  description: string;
+  type: 'positive' | 'negative' | 'neutral';
+  impactText: string;
+  effect?: {
+    foodChangeMonths?: number;
+    waterChangeMonths?: number;
+    addShelterSlot?: number;
+    forceRevealAllCategory?: CardCategory;
+    speedUpTimerSec?: number;
+  };
 }
 
 export interface ShelterSpecs {
@@ -59,7 +77,7 @@ export interface PlayerCardSlot {
 }
 
 export interface Player {
-  id: string;               // Socket ID or unique player ID
+  id: string;
   telegramId?: number;
   username: string;
   displayName: string;
@@ -77,29 +95,31 @@ export interface Player {
 export type VotingMode = 'open' | 'secret';
 
 export interface RoomSettings {
-  maxPlayers: number;
-  targetSurvivors: number; // e.g. 2, 3, 4
-  votingMode: VotingMode;  // 'open' | 'secret'
-  finalSimulation: boolean;// true = run algorithm simulation at end
+  maxPlayers: number; // 4 to 16
+  targetSurvivors: number; // 1, 2, 3, 4
+  votingMode: VotingMode;
+  finalSimulation: boolean;
   turnDurationSec: number; // 30, 45, 60
   debateDurationSec: number; // 45, 60, 90
   selectedDecks: DeckTheme[];
   allowSpecialCards: boolean;
+  excludedCardIds: string[]; // Custom cards turned OFF by host
 }
 
 export type GamePhase =
   | 'LOBBY'
   | 'DISASTER_INTRO'
-  | 'ROUND_PITCH'      // Players reveal their card (Round 1: Profession mandatory, Round 2+: Player choice)
-  | 'ROUND_DEBATE'     // Free debate timer
-  | 'VOTING'           // Voting in progress
-  | 'VOTE_RESULTS'     // Show elimination
-  | 'FINAL_SIMULATION' // Calculating if shelter survived
+  | 'ROUND_PITCH'      // Speaker reveals card
+  | 'ROUND_DEBATE'     // Free debate
+  | 'VOTING'           // Cast votes
+  | 'VOTE_RESULTS'     // Elimination display
+  | 'BUNKER_EVENT'     // Surprise Discovery/Event after each round!
+  | 'FINAL_SIMULATION' // Final outcome calculation
   | 'GAME_OVER';
 
 export interface SimulationResult {
   isSuccess: boolean;
-  survivalScore: number; // 0 - 100%
+  survivalScore: number;
   headline: string;
   detailedStory: string;
   breakdown: {
@@ -128,8 +148,9 @@ export interface GameRoomState {
   isTimerPaused: boolean;
   catastrophe: Catastrophe | null;
   shelterSpecs: ShelterSpecs | null;
+  currentBunkerEvent: BunkerEvent | null;
   players: Record<string, Player>;
-  playerOrder: string[]; // List of player IDs in speaking order
+  playerOrder: string[];
   settings: RoomSettings;
   eliminatedPlayerIds: string[];
   survivorPlayerIds: string[];
@@ -152,7 +173,7 @@ export interface ServerToClientEvents {
   cardRevealed: (data: { playerId: string; category: CardCategory; card: CardItem }) => void;
   voteCast: (data: { voterId: string; targetId: string | null }) => void;
   playerEliminated: (data: { playerId: string; reason: string }) => void;
-  specialCardTriggered: (data: { playerId: string; cardTitle: string; effectDesc: string }) => void;
+  bunkerEventTriggered: (event: BunkerEvent) => void;
   chatMessageReceived: (message: GameRoomState['chatMessages'][0]) => void;
   errorOccurred: (message: string) => void;
 }
@@ -161,6 +182,7 @@ export interface ClientToServerEvents {
   createRoom: (payload: { playerName: string; telegramId?: number; avatarUrl?: string; settings?: Partial<RoomSettings> }, callback: (res: { success: boolean; roomCode?: string; error?: string }) => void) => void;
   joinRoom: (payload: { roomCode: string; playerName: string; telegramId?: number; avatarUrl?: string }, callback: (res: { success: boolean; roomCode?: string; error?: string }) => void) => void;
   updateSettings: (settings: Partial<RoomSettings>) => void;
+  toggleCardExclusion: (cardId: string) => void;
   setReady: (isReady: boolean) => void;
   startGame: () => void;
   revealCard: (category: CardCategory) => void;
@@ -171,5 +193,6 @@ export interface ClientToServerEvents {
   pauseTimer: () => void;
   resumeTimer: () => void;
   addTimerTime: (seconds: number) => void;
-  skipPhase: () => void;
+  skipSpeakerOrPhase: () => void;
+  acknowledgeEvent: () => void;
 }

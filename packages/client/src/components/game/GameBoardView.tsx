@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { GameRoomState, CardCategory } from '@boshpana/shared';
 import { 
   AlertTriangle, Users, MessageSquare, Shield, Skull, 
-  LogOut, Volume2, VolumeX, Send, X, AlertCircle
+  LogOut, Volume2, VolumeX, Send, X, AlertCircle, Sparkles
 } from 'lucide-react';
 import { CharacterCard } from '../card/CharacterCard';
 import { TimerBar } from './TimerBar';
 import { VotingPanel } from './VotingPanel';
 import { SimulationView } from './SimulationView';
 import { DisasterModal } from './DisasterModal';
+import { BunkerEventModal } from './BunkerEventModal';
 import { sound } from '../../services/sound';
 
 interface FloatingReaction {
@@ -27,8 +28,9 @@ interface GameBoardViewProps {
   onSendChatMessage: (text: string) => void;
   onPauseToggle: () => void;
   onAdd30Sec: () => void;
-  onSkipPhase: () => void;
+  onSkipCurrent: () => void;
   onStartRounds: () => void;
+  onAcknowledgeEvent: () => void;
   onPlayAgain: () => void;
   onLeaveGame: () => void;
 }
@@ -45,8 +47,9 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
   onSendChatMessage,
   onPauseToggle,
   onAdd30Sec,
-  onSkipPhase,
+  onSkipCurrent,
   onStartRounds,
+  onAcknowledgeEvent,
   onPlayAgain,
   onLeaveGame
 }) => {
@@ -97,19 +100,19 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
   // Determine what phase label to show
   let phaseLabel = 'APOKALIPSIS';
   if (roomState.phase === 'DISASTER_INTRO') phaseLabel = 'FALOKAT E\'LONI';
-  else if (roomState.phase === 'ROUND_PITCH') phaseLabel = `${roomState.roundNumber}-RAUND: KARTA OCHISH (PITCH)`;
+  else if (roomState.phase === 'ROUND_PITCH') phaseLabel = `${roomState.roundNumber}-RAUND: KARTA OCHISH`;
   else if (roomState.phase === 'ROUND_DEBATE') phaseLabel = 'UMUMIY BAHS (MUHOKAMA)';
   else if (roomState.phase === 'VOTING') phaseLabel = 'OVOZ BERISH';
-  else if (roomState.phase === 'VOTE_RESULTS') phaseLabel = 'RAUND NATIJASI';
+  else if (roomState.phase === 'BUNKER_EVENT') phaseLabel = 'BOSHPANA HODISASI';
   else if (roomState.phase === 'FINAL_SIMULATION') phaseLabel = 'BOSHPANA TAQDIRI';
   else if (roomState.phase === 'GAME_OVER') phaseLabel = 'O\'YIN TUGADI';
 
   const isRound1 = roomState.roundNumber === 1;
 
   return (
-    <div className="max-w-6xl mx-auto p-3 sm:p-5 space-y-4 animate-fadeIn pb-28 relative">
+    <div className="max-w-4xl mx-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 animate-fadeIn pb-32 relative">
       
-      {/* Floating Emojis Overlay */}
+      {/* Floating Reactions Overlay */}
       <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
         {floatingReactions.map((r) => (
           <div
@@ -123,24 +126,24 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
       </div>
 
       {/* Top Header: Disaster Banner & Controls */}
-      <div className="bg-bunker-900 border border-slate-800 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 shadow-md">
+      <div className="bg-bunker-900 border border-slate-800 rounded-2xl p-2.5 sm:p-3.5 flex items-center justify-between gap-2 shadow-md">
         <button
           type="button"
           onClick={() => { sound.playClick(); setShowDisasterModal(true); }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-hazard-orange/15 hover:bg-hazard-orange/25 border border-hazard-orange/40 text-hazard-orange transition-colors min-w-0"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-hazard-orange/15 hover:bg-hazard-orange/25 border border-hazard-orange/40 text-hazard-orange transition-colors min-w-0"
         >
-          <AlertTriangle size={16} className="flex-shrink-0 animate-pulse" />
+          <AlertTriangle size={15} className="flex-shrink-0 animate-pulse" />
           <div className="text-left truncate">
-            <span className="text-[9px] font-mono block uppercase tracking-wider text-slate-400">Falokat</span>
+            <span className="text-[8px] font-mono block uppercase tracking-wider text-slate-400">Falokat</span>
             <span className="text-xs sm:text-sm font-bold truncate block">{roomState.catastrophe?.title || 'Apokalipsis'}</span>
           </div>
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Target Survivors Badge */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bunker-950 border border-slate-800 text-xs font-mono">
-            <Shield size={13} className="text-cyan-400" />
-            <span className="text-slate-400">Joylar:</span>
+          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-bunker-950 border border-slate-800 text-[11px] font-mono">
+            <Shield size={12} className="text-cyan-400" />
+            <span className="text-slate-400 hidden sm:inline">Joylar:</span>
             <span className="font-bold text-amber-400">{roomState.settings.targetSurvivors} ta</span>
           </div>
 
@@ -148,26 +151,26 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
           <button
             type="button"
             onClick={handleToggleSound}
-            className="p-2 rounded-xl bg-bunker-950 hover:bg-bunker-800 text-slate-300 border border-slate-800 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl bg-bunker-950 hover:bg-bunker-800 text-slate-300 border border-slate-800 transition-colors"
             title={isMuted ? "Ovozni yoqish" : "Ovozni o'chirish"}
           >
-            {isMuted ? <VolumeX size={16} className="text-red-400" /> : <Volume2 size={16} className="text-emerald-400" />}
+            {isMuted ? <VolumeX size={15} className="text-red-400" /> : <Volume2 size={15} className="text-emerald-400" />}
           </button>
 
           {/* Chat Toggle */}
           <button
             type="button"
             onClick={() => { sound.playClick(); setIsChatOpen(!isChatOpen); }}
-            className={`p-2 rounded-xl border transition-colors relative ${
+            className={`p-1.5 sm:p-2 rounded-xl border transition-colors relative ${
               isChatOpen 
                 ? 'bg-cyan-950 border-cyan-500 text-cyan-300' 
                 : 'bg-bunker-950 hover:bg-bunker-800 text-slate-300 border-slate-800'
             }`}
             title="Chatni ochish"
           >
-            <MessageSquare size={16} />
+            <MessageSquare size={15} />
             {roomState.chatMessages.length > 0 && !isChatOpen && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-hazard-orange rounded-full" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-hazard-orange rounded-full" />
             )}
           </button>
 
@@ -175,10 +178,10 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
           <button
             type="button"
             onClick={() => { sound.playClick(); setShowExitConfirm(true); }}
-            className="p-2 rounded-xl bg-red-950/70 hover:bg-red-900/80 text-red-400 border border-red-800/80 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl bg-red-950/70 hover:bg-red-900/80 text-red-400 border border-red-800/80 transition-colors"
             title="O'yindan chiqish"
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
           </button>
         </div>
       </div>
@@ -196,7 +199,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
           onPauseToggle={onPauseToggle}
           onAdd30Sec={onAdd30Sec}
           onEndTurn={onEndTurn}
-          onSkipPhase={onSkipPhase}
+          onSkipPhase={onSkipCurrent}
         />
       )}
 
@@ -214,16 +217,16 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
           onPlayAgain={isHost ? onPlayAgain : undefined}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
           
-          {/* Players Carousel / List (Left Column) */}
-          <div className="lg:col-span-1 space-y-2">
-            <h3 className="text-xs font-mono uppercase text-slate-400 tracking-wider flex items-center justify-between px-1">
-              <span>Ishtirokchilar</span>
+          {/* Players Carousel / List (Left Column / Top on Mobile) */}
+          <div className="md:col-span-1 space-y-2">
+            <h3 className="text-[11px] font-mono uppercase text-slate-400 tracking-wider flex items-center justify-between px-1">
+              <span>O'yinchilar</span>
               <span className="text-emerald-400">{Object.values(roomState.players).filter(p => p.isAlive).length} tirik</span>
             </h3>
 
-            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 pr-1">
+            <div className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 pr-1">
               {roomState.playerOrder.map((pid) => {
                 const player = roomState.players[pid];
                 if (!player) return null;
@@ -238,7 +241,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
                     key={pid}
                     type="button"
                     onClick={() => { sound.playClick(); setSelectedPlayerId(pid); }}
-                    className={`min-w-[150px] lg:min-w-full p-2.5 rounded-xl border text-left flex items-center justify-between gap-2 transition-all ${
+                    className={`min-w-[140px] md:min-w-full p-2 rounded-xl border text-left flex items-center justify-between gap-1.5 transition-all ${
                       !player.isAlive
                         ? 'opacity-40 bg-bunker-950 border-slate-900 line-through'
                         : isSelected
@@ -248,8 +251,8 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
                             : 'bg-bunker-900 border-slate-800 hover:border-slate-700'
                     }`}
                   >
-                    <div className="min-w-0 flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-bunker-950 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 flex-shrink-0">
+                    <div className="min-w-0 flex items-center gap-1.5">
+                      <div className="w-6 h-6 rounded-full bg-bunker-950 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300 flex-shrink-0">
                         {player.displayName.slice(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -257,9 +260,9 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
                           <span className="font-bold text-xs text-slate-100 truncate block">
                             {player.displayName}
                           </span>
-                          {isMe && <span className="text-[9px] text-cyan-400 font-mono">(Siz)</span>}
+                          {isMe && <span className="text-[8px] text-cyan-400 font-mono">(Siz)</span>}
                         </div>
-                        <span className="text-[10px] text-amber-400/90 truncate block">
+                        <span className="text-[9px] text-amber-400/90 truncate block">
                           {player.cards.profession?.isRevealed ? player.cards.profession.card.title : 'Kasbi yashirin'}
                         </span>
                       </div>
@@ -267,11 +270,11 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
 
                     <div className="flex items-center gap-1">
                       {!player.isAlive ? (
-                        <Skull size={14} className="text-red-500" />
+                        <Skull size={13} className="text-red-500" />
                       ) : isSpeaker ? (
                         <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
                       ) : (
-                        <span className="text-[10px] font-mono text-slate-500">
+                        <span className="text-[9px] font-mono text-slate-500">
                           {revealedCardsCount}/7
                         </span>
                       )}
@@ -283,24 +286,24 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
           </div>
 
           {/* Main Area: Character Cards Sheet */}
-          <div className="lg:col-span-3 space-y-3">
-            <div className="bg-bunker-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div className="md:col-span-3 space-y-3">
+            <div className="bg-bunker-900 border border-slate-800 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-bunker-950 border border-slate-700 flex items-center justify-center text-sm font-bold text-slate-200">
+                <div className="w-8 h-8 rounded-xl bg-bunker-950 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200">
                   {targetPlayer.displayName.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base sm:text-lg font-black text-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-sm sm:text-base font-black text-slate-100">
                       {targetPlayer.displayName}
                     </h2>
                     {targetPlayer.id === myPlayerId && (
-                      <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-[10px] font-mono font-bold">
+                      <span className="px-1.5 py-0.2 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-[9px] font-mono font-bold">
                         SIZNING PROFILINGIZ
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     {targetPlayer.isAlive ? '🟢 Boshpanaga da\'vogar (Tirik)' : '🔴 Chiqarib yuborilgan (Halok bo\'ldi)'}
                   </p>
                 </div>
@@ -308,7 +311,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
 
               {/* Turn Banner if it's my turn */}
               {isMyTurn && roomState.phase === 'ROUND_PITCH' && targetPlayer.id === myPlayerId && (
-                <div className="px-3 py-1.5 rounded-xl bg-hazard-orange/20 border border-hazard-orange text-hazard-orange text-xs font-bold font-mono animate-pulse">
+                <div className="px-2.5 py-1 rounded-xl bg-hazard-orange/20 border border-hazard-orange text-hazard-orange text-[11px] font-bold font-mono animate-pulse">
                   ⚡ KARTANGIZNI TANLANG VA OCHING!
                 </div>
               )}
@@ -343,9 +346,9 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
         </div>
       )}
 
-      {/* Floating Reactions Bar */}
-      <div className="fixed bottom-3 inset-x-0 max-w-xl mx-auto px-4 z-40">
-        <div className="bg-bunker-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl p-2.5 shadow-2xl space-y-2">
+      {/* Floating Reactions Bar (Mobile 9:16 Thumb Area) */}
+      <div className="fixed bottom-2 inset-x-0 max-w-lg mx-auto px-3 z-40">
+        <div className="bg-bunker-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl p-2 shadow-2xl space-y-2">
           
           {/* Quick Reaction Emojis */}
           <div className="flex items-center justify-between gap-1 overflow-x-auto px-1">
@@ -354,7 +357,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
                 key={emoji}
                 type="button"
                 onClick={() => spawnReaction(emoji)}
-                className="w-9 h-9 rounded-xl bg-bunker-950 hover:bg-bunker-800 text-lg flex items-center justify-center transition-transform active:scale-125 flex-shrink-0 border border-slate-800 hover:border-hazard-orange/50"
+                className="w-8 h-8 rounded-xl bg-bunker-950 hover:bg-bunker-800 text-base flex items-center justify-center transition-transform active:scale-125 flex-shrink-0 border border-slate-800 hover:border-hazard-orange/50"
               >
                 {emoji}
               </button>
@@ -365,23 +368,23 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
           {isChatOpen && (
             <div className="pt-2 border-t border-slate-800 space-y-2 animate-fadeIn">
               {/* Message List */}
-              <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 text-xs">
+              <div className="max-h-32 overflow-y-auto space-y-1 pr-1 text-xs">
                 {roomState.chatMessages.length === 0 ? (
-                  <p className="text-slate-500 italic text-center py-2">Xabarlar yo'q...</p>
+                  <p className="text-slate-500 italic text-center py-2 text-[11px]">Xabarlar yo'q...</p>
                 ) : (
                   roomState.chatMessages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`p-2 rounded-xl text-xs ${
+                      className={`p-1.5 rounded-xl text-[11px] ${
                         msg.isSystem
                           ? 'bg-amber-950/40 border border-amber-500/30 text-amber-300 font-mono'
                           : msg.senderId === myPlayerId
-                            ? 'bg-hazard-orange/20 border border-hazard-orange/40 text-slate-100 ml-6'
-                            : 'bg-bunker-950 border border-slate-800 text-slate-200 mr-6'
+                            ? 'bg-hazard-orange/20 border border-hazard-orange/40 text-slate-100 ml-4'
+                            : 'bg-bunker-950 border border-slate-800 text-slate-200 mr-4'
                       }`}
                     >
                       {!msg.isSystem && (
-                        <span className="font-bold text-[10px] text-slate-400 block">
+                        <span className="font-bold text-[9px] text-slate-400 block">
                           {msg.senderName}
                         </span>
                       )}
@@ -392,20 +395,20 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
               </div>
 
               {/* Chat Input Form */}
-              <form onSubmit={handleSendChat} className="flex items-center gap-2">
+              <form onSubmit={handleSendChat} className="flex items-center gap-1.5">
                 <input
                   type="text"
                   maxLength={120}
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder="Xabar yozing..."
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-bunker-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-hazard-orange"
+                  className="flex-1 px-3 py-1.5 rounded-xl bg-bunker-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-hazard-orange"
                 />
                 <button
                   type="submit"
-                  className="px-3.5 py-2 rounded-xl bg-hazard-orange hover:bg-hazard-orangeDark text-white text-xs font-bold transition-colors flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-xl bg-hazard-orange hover:bg-hazard-orangeDark text-white text-xs font-bold transition-colors flex items-center gap-1"
                 >
-                  <Send size={13} />
+                  <Send size={12} />
                 </button>
               </form>
             </div>
@@ -416,7 +419,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
       {/* Exit Game Confirmation Modal */}
       {showExitConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-bunker-900 border-2 border-red-500 rounded-2xl max-w-sm w-full p-6 text-center space-y-4">
+          <div className="bg-bunker-900 border-2 border-red-500 rounded-3xl max-w-sm w-full p-5 text-center space-y-4 shadow-2xl">
             <div className="w-12 h-12 rounded-full bg-red-950 border border-red-500 flex items-center justify-center text-red-400 mx-auto">
               <AlertCircle size={26} />
             </div>
@@ -451,6 +454,15 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bunker Surprise Discovery Event Modal */}
+      {roomState.phase === 'BUNKER_EVENT' && roomState.currentBunkerEvent && (
+        <BunkerEventModal
+          event={roomState.currentBunkerEvent}
+          isHost={!!isHost}
+          onAcknowledge={onAcknowledgeEvent}
+        />
       )}
 
       {/* Disaster Modal */}

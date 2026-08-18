@@ -1,10 +1,10 @@
 import { 
   GameRoomState, Player, RoomSettings, CardCategory, 
-  SimulationResult, Catastrophe, ShelterSpecs, PlayerCardSlot 
+  SimulationResult, Catastrophe, ShelterSpecs, PlayerCardSlot,
+  BunkerEvent
 } from '@boshpana/shared';
-import { CATASTROPHES, SHELTER_SPECS_PRESETS, CARDS_DATA } from '@boshpana/shared';
+import { CATASTROPHES, SHELTER_SPECS_PRESETS, CARDS_DATA, BUNKER_EVENTS } from '@boshpana/shared';
 
-// Helper to shuffle array
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -34,6 +34,7 @@ export class LocalGameEngine {
       debateDurationSec: 60,
       selectedDecks: ['classic', 'uzbek'],
       allowSpecialCards: true,
+      excludedCardIds: [],
       ...initialSettings
     };
 
@@ -44,25 +45,13 @@ export class LocalGameEngine {
       roundNumber: 1,
       currentSpeakerIndex: 0,
       activeSpeakerPlayerId: null,
-      phaseTimeRemainingSec: defaultSettings.turnDurationSec,
+      phaseTimeRemainingSec: 0,
       isTimerPaused: false,
       catastrophe: null,
       shelterSpecs: null,
-      players: {
-        [hostId]: {
-          id: hostId,
-          username: hostName.toLowerCase().replace(/\s+/g, '_'),
-          displayName: hostName,
-          isHost: true,
-          isReady: true,
-          isAlive: true,
-          cards: {} as any,
-          hasUsedSpecialCard: false,
-          hasVoted: false,
-          receivedVotesCount: 0
-        }
-      },
-      playerOrder: [hostId],
+      currentBunkerEvent: null,
+      players: {},
+      playerOrder: [],
       settings: defaultSettings,
       eliminatedPlayerIds: [],
       survivorPlayerIds: [],
@@ -70,41 +59,81 @@ export class LocalGameEngine {
       chatMessages: []
     };
 
-    // Add demo bots for instant testing if in standalone mode
-    this.addDemoBots();
-    this.broadcast();
+    // Add Host player
+    this.state.players[hostId] = {
+      id: hostId,
+      username: hostName.toLowerCase().replace(/\s+/g, '_'),
+      displayName: hostName,
+      isHost: true,
+      isReady: true,
+      isAlive: true,
+      cards: {} as any,
+      hasUsedSpecialCard: false,
+      hasVoted: false,
+      receivedVotesCount: 0
+    };
+
+    // Pre-populate with 3 demo bots by default so room has 4 players
+    this.addDemoBot('Sardor (Bot)');
+    this.addDemoBot('Nilufar (Bot)');
+    this.addDemoBot('Jamshid (Bot)');
+
+    this.state.playerOrder = Object.keys(this.state.players);
   }
 
-  public getState() {
+  public getState(): GameRoomState {
     return this.state;
   }
 
   private broadcast() {
-    this.onStateChange({ ...this.state, players: { ...this.state.players } });
+    this.onStateChange({ ...this.state });
   }
 
-  public addDemoBots() {
-    const botNames = ['Jasur (Bot)', 'Malika (Bot)', 'Bekzod (Bot)', 'Dilnoza (Bot)'];
-    botNames.forEach((name) => {
-      const id = 'bot-' + Math.random().toString(36).substring(2, 7);
-      this.state.players[id] = {
-        id,
-        username: name.toLowerCase().replace(/[^a-z]/g, ''),
-        displayName: name,
-        isHost: false,
-        isReady: true,
-        isAlive: true,
-        cards: {} as any,
-        hasUsedSpecialCard: false,
-        hasVoted: false,
-        receivedVotesCount: 0
-      };
-      this.state.playerOrder.push(id);
-    });
+  public addDemoBot(botName?: string) {
+    const playersList = Object.values(this.state.players);
+    if (playersList.length >= this.state.settings.maxPlayers) return;
+
+    const botId = 'player-bot-' + Math.random().toString(36).substring(2, 7);
+    const names = ['Azizbek', 'Shaxlo', 'Bobur', 'Madina', 'Otabek', 'Dildora', 'Javohir', 'Guli'];
+    const randomName = botName || `${names[Math.floor(Math.random() * names.length)]} (Bot)`;
+
+    this.state.players[botId] = {
+      id: botId,
+      username: 'bot_' + Math.floor(Math.random() * 1000),
+      displayName: randomName,
+      isHost: false,
+      isReady: true,
+      isAlive: true,
+      cards: {} as any,
+      hasUsedSpecialCard: false,
+      hasVoted: false,
+      receivedVotesCount: 0
+    };
+
+    this.state.playerOrder = Object.keys(this.state.players);
+    this.broadcast();
   }
 
-  public updateSettings(settings: Partial<RoomSettings>) {
-    this.state.settings = { ...this.state.settings, ...settings };
+  public removeDemoBot(botId: string) {
+    if (this.state.players[botId] && !this.state.players[botId].isHost) {
+      delete this.state.players[botId];
+      this.state.playerOrder = Object.keys(this.state.players);
+      this.broadcast();
+    }
+  }
+
+  public toggleCardExclusion(cardId: string) {
+    const current = this.state.settings.excludedCardIds || [];
+    if (current.includes(cardId)) {
+      this.state.settings.excludedCardIds = current.filter(id => id !== cardId);
+    } else {
+      this.state.settings.excludedCardIds = [...current, cardId];
+    }
+    this.broadcast();
+  }
+
+  public updateSettings(newSettings: Partial<RoomSettings>) {
+    this.state.settings = { ...this.state.settings, ...newSettings };
     this.broadcast();
   }
 
@@ -116,47 +145,52 @@ export class LocalGameEngine {
   }
 
   public startGame() {
-    // 1. Pick Catastrophe & Shelter
-    const matchingCatastrophes = CATASTROPHES.filter((c) =>
+    const eligibleCatastrophes = CATASTROPHES.filter(c =>
       this.state.settings.selectedDecks.includes(c.theme)
     );
-    this.state.catastrophe = matchingCatastrophes[Math.floor(Math.random() * matchingCatastrophes.length)] || CATASTROPHES[0];
+    this.state.catastrophe = eligibleCatastrophes[Math.floor(Math.random() * eligibleCatastrophes.length)] || CATASTROPHES[0];
     this.state.shelterSpecs = SHELTER_SPECS_PRESETS[Math.floor(Math.random() * SHELTER_SPECS_PRESETS.length)];
 
-    // 2. Deal Cards to all players
-    const matchingCards = CARDS_DATA.filter((c) =>
-      this.state.settings.selectedDecks.includes(c.theme)
+    const categories: CardCategory[] = ['profession', 'biology', 'health', 'baggage', 'hobby', 'fact', 'special'];
+    const activeCards = CARDS_DATA.filter(c =>
+      this.state.settings.selectedDecks.includes(c.theme) &&
+      !this.state.settings.excludedCardIds?.includes(c.id)
     );
 
-    const categories: CardCategory[] = ['profession', 'biology', 'health', 'baggage', 'hobby', 'fact', 'special'];
+    const categoryDecks: Record<CardCategory, any[]> = {} as any;
+    categories.forEach(cat => {
+      categoryDecks[cat] = shuffle(activeCards.filter(c => c.category === cat));
+    });
 
-    Object.values(this.state.players).forEach((player) => {
-      const playerCards: Record<CardCategory, PlayerCardSlot> = {} as any;
+    Object.values(this.state.players).forEach(player => {
+      player.isAlive = true;
+      player.cards = {} as any;
+      player.hasUsedSpecialCard = false;
+      player.hasVoted = false;
+      player.votedForPlayerId = null;
+      player.receivedVotesCount = 0;
 
-      categories.forEach((cat) => {
-        const catCards = matchingCards.filter((c) => c.category === cat);
-        const card = catCards.length > 0
-          ? catCards[Math.floor(Math.random() * catCards.length)]
-          : CARDS_DATA.find((c) => c.category === cat)!;
-
-        playerCards[cat] = {
+      categories.forEach(cat => {
+        let card = categoryDecks[cat]?.pop();
+        if (!card) {
+          card = CARDS_DATA.find(c => c.category === cat) || {
+            id: `${cat}-fallback`,
+            category: cat,
+            title: `Standart ${cat}`,
+            theme: 'classic'
+          };
+        }
+        player.cards[cat] = {
           category: cat,
           card,
           isRevealed: false
         };
       });
-
-      player.cards = playerCards;
-      player.isAlive = true;
-      player.hasVoted = false;
-      player.receivedVotesCount = 0;
     });
 
-    this.state.phase = 'DISASTER_INTRO';
+    this.state.playerOrder = shuffle(Object.keys(this.state.players));
     this.state.roundNumber = 1;
-    this.state.currentSpeakerIndex = 0;
-    this.state.activeSpeakerPlayerId = this.state.playerOrder[0];
-    this.state.phaseTimeRemainingSec = this.state.settings.turnDurationSec;
+    this.state.phase = 'DISASTER_INTRO';
     this.broadcast();
   }
 
@@ -171,16 +205,17 @@ export class LocalGameEngine {
 
   public revealCard(playerId: string, category: CardCategory) {
     const player = this.state.players[playerId];
-    if (player && player.cards[category]) {
+    if (!player || !player.isAlive) return;
+
+    if (player.cards[category]) {
       player.cards[category].isRevealed = true;
       player.cards[category].revealedAtRound = this.state.roundNumber;
 
-      // Add system message to chat
       this.addChatMessage({
         id: Math.random().toString(),
         senderId: 'system',
-        senderName: 'Tizim',
-        text: `📢 ${player.displayName} o'z kartasini ochdi: [${category.toUpperCase()}] ${player.cards[category].card.title}`,
+        senderName: 'TIZIM',
+        text: `📢 ${player.displayName} o'zining [${category.toUpperCase()}] kartasini ochdi: "${player.cards[category].card.title}"`,
         timestamp: Date.now(),
         isSystem: true
       });
@@ -190,37 +225,31 @@ export class LocalGameEngine {
   }
 
   public nextSpeaker() {
-    // Find alive players
-    const aliveOrder = this.state.playerOrder.filter((id) => this.state.players[id]?.isAlive);
-    const nextIndex = this.state.currentSpeakerIndex + 1;
+    const alivePlayers = this.state.playerOrder.filter(id => this.state.players[id]?.isAlive);
+    const currentAliveIndex = alivePlayers.indexOf(this.state.activeSpeakerPlayerId || '');
 
-    if (nextIndex < aliveOrder.length) {
-      this.state.currentSpeakerIndex = nextIndex;
-      this.state.activeSpeakerPlayerId = aliveOrder[nextIndex];
-      this.state.phaseTimeRemainingSec = this.state.settings.turnDurationSec;
-
-      // If bot, reveal card automatically
-      if (this.state.activeSpeakerPlayerId.startsWith('bot-')) {
-        this.botTurn(this.state.activeSpeakerPlayerId);
+    // If bot was speaking and hasn't revealed card, auto reveal
+    if (this.state.activeSpeakerPlayerId && this.state.activeSpeakerPlayerId.startsWith('player-bot-')) {
+      const bot = this.state.players[this.state.activeSpeakerPlayerId];
+      if (bot) {
+        if (this.state.roundNumber === 1 && !bot.cards.profession.isRevealed) {
+          this.revealCard(bot.id, 'profession');
+        } else {
+          const unrevealed = (['biology', 'health', 'baggage', 'hobby', 'fact'] as CardCategory[])
+            .filter(cat => !bot.cards[cat]?.isRevealed);
+          if (unrevealed.length > 0) {
+            this.revealCard(bot.id, unrevealed[0]);
+          }
+        }
       }
-    } else {
-      // All speakers finished pitch -> Move to Debate or Voting
-      this.startDebatePhase();
     }
-    this.broadcast();
-  }
 
-  private botTurn(botId: string) {
-    const bot = this.state.players[botId];
-    if (!bot) return;
-
-    if (this.state.roundNumber === 1) {
-      this.revealCard(botId, 'profession');
+    if (currentAliveIndex >= 0 && currentAliveIndex < alivePlayers.length - 1) {
+      this.state.activeSpeakerPlayerId = alivePlayers[currentAliveIndex + 1];
+      this.state.phaseTimeRemainingSec = this.state.settings.turnDurationSec;
+      this.broadcast();
     } else {
-      const unrevealed = (Object.keys(bot.cards) as CardCategory[]).filter((k) => !bot.cards[k].isRevealed);
-      if (unrevealed.length > 0) {
-        this.revealCard(botId, unrevealed[Math.floor(Math.random() * unrevealed.length)]);
-      }
+      this.startDebatePhase();
     }
   }
 
@@ -235,143 +264,153 @@ export class LocalGameEngine {
     this.state.phase = 'VOTING';
     this.state.phaseTimeRemainingSec = 30;
 
-    // Reset votes
-    Object.values(this.state.players).forEach((p) => {
+    Object.values(this.state.players).forEach(p => {
       p.hasVoted = false;
       p.votedForPlayerId = null;
       p.receivedVotesCount = 0;
     });
 
-    // Make bots vote automatically
+    this.broadcast();
+
+    // Auto vote for demo bots after 2 seconds
     setTimeout(() => {
-      const alivePlayers = Object.values(this.state.players).filter((p) => p.isAlive);
-      alivePlayers.forEach((p) => {
-        if (p.id.startsWith('bot-')) {
-          const targets = alivePlayers.filter((t) => t.id !== p.id);
+      const alive = Object.values(this.state.players).filter(p => p.isAlive);
+      alive.forEach(bot => {
+        if (bot.id.startsWith('player-bot-')) {
+          const targets = alive.filter(t => t.id !== bot.id);
           if (targets.length > 0) {
             const target = targets[Math.floor(Math.random() * targets.length)];
-            this.castVote(p.id, target.id);
+            this.castVote(bot.id, target.id);
           }
         }
       });
     }, 1500);
-
-    this.broadcast();
   }
 
-  public castVote(voterId: string, targetId: string) {
+  public castVote(voterId: string, targetPlayerId: string) {
     const voter = this.state.players[voterId];
-    const target = this.state.players[targetId];
+    if (!voter || !voter.isAlive || voter.hasVoted) return;
 
-    if (voter && target && !voter.hasVoted) {
-      voter.hasVoted = true;
-      voter.votedForPlayerId = targetId;
+    voter.hasVoted = true;
+    voter.votedForPlayerId = targetPlayerId;
+
+    const target = this.state.players[targetPlayerId];
+    if (target) {
       target.receivedVotesCount = (target.receivedVotesCount || 0) + 1;
+    }
 
-      // Check if all alive players voted
-      const alivePlayers = Object.values(this.state.players).filter((p) => p.isAlive);
-      const allVoted = alivePlayers.every((p) => p.hasVoted);
+    const aliveCount = Object.values(this.state.players).filter(p => p.isAlive).length;
+    const votesCount = Object.values(this.state.players).filter(p => p.isAlive && p.hasVoted).length;
 
-      if (allVoted) {
-        this.resolveVoting();
-      } else {
-        this.broadcast();
-      }
+    this.broadcast();
+
+    if (votesCount >= aliveCount) {
+      setTimeout(() => this.resolveVoting(), 1500);
     }
   }
 
-  private resolveVoting() {
-    const alivePlayers = Object.values(this.state.players).filter((p) => p.isAlive);
-    
-    // Find player with highest votes
+  public resolveVoting() {
+    const alivePlayers = Object.values(this.state.players).filter(p => p.isAlive);
     let maxVotes = -1;
-    let eliminatedPlayer: Player | null = null;
+    let victim: Player | null = null;
 
-    alivePlayers.forEach((p) => {
+    alivePlayers.forEach(p => {
       if (p.receivedVotesCount > maxVotes) {
         maxVotes = p.receivedVotesCount;
-        eliminatedPlayer = p;
+        victim = p;
       }
     });
 
-    if (eliminatedPlayer) {
-      (eliminatedPlayer as Player).isAlive = false;
-      this.state.eliminatedPlayerIds.push((eliminatedPlayer as Player).id);
+    if (victim) {
+      (victim as Player).isAlive = false;
+      this.state.eliminatedPlayerIds.push((victim as Player).id);
 
       this.addChatMessage({
         id: Math.random().toString(),
         senderId: 'system',
-        senderName: 'Tizim',
-        text: `💀 Ovoz berish natijasida ${(eliminatedPlayer as Player).displayName} boshpanadan chiqarib yuborildi!`,
+        senderName: 'TIZIM',
+        text: `⚖️ Ko'pchilik ovozi bilan ${(victim as Player).displayName} boshpanadan chiqarib yuborildi!`,
         timestamp: Date.now(),
         isSystem: true
       });
     }
 
-    // Check if target survivor count reached
-    const remainingAlive = Object.values(this.state.players).filter((p) => p.isAlive);
+    const remainingAlive = Object.values(this.state.players).filter(p => p.isAlive);
 
+    // Check if remaining survivors equal target survivors count!
     if (remainingAlive.length <= this.state.settings.targetSurvivors) {
-      this.state.survivorPlayerIds = remainingAlive.map((p) => p.id);
-      
-      if (this.state.settings.finalSimulation) {
-        this.runEndingSimulation();
-      } else {
-        this.state.phase = 'GAME_OVER';
-        this.broadcast();
-      }
+      this.state.survivorPlayerIds = remainingAlive.map(p => p.id);
+      this.calculateFinalSimulation();
     } else {
-      // Start Next Round!
-      this.state.roundNumber += 1;
-      this.state.phase = 'ROUND_PITCH';
-      this.state.currentSpeakerIndex = 0;
-      const nextAlive = this.state.playerOrder.filter((id) => this.state.players[id]?.isAlive);
-      this.state.activeSpeakerPlayerId = nextAlive[0];
-      this.state.phaseTimeRemainingSec = this.state.settings.turnDurationSec;
-      this.broadcast();
+      // Trigger surprise Bunker Discovery Event before next round!
+      this.triggerBunkerEvent();
     }
   }
 
-  private runEndingSimulation() {
-    const survivors = Object.values(this.state.players).filter((p) => p.isAlive);
-    
-    // Calculate total impact scores
+  public triggerBunkerEvent() {
+    const randomEvent = BUNKER_EVENTS[Math.floor(Math.random() * BUNKER_EVENTS.length)];
+    this.state.currentBunkerEvent = randomEvent;
+    this.state.phase = 'BUNKER_EVENT';
+    if (this.timerInterval) clearInterval(this.timerInterval);
+
+    // Apply event effects if any
+    if (randomEvent.effect?.addShelterSlot) {
+      this.state.settings.targetSurvivors += randomEvent.effect.addShelterSlot;
+    }
+
+    this.broadcast();
+  }
+
+  public acknowledgeEvent() {
+    this.state.roundNumber += 1;
+    this.state.currentBunkerEvent = null;
+    this.state.phase = 'ROUND_PITCH';
+    const alivePlayers = this.state.playerOrder.filter(id => this.state.players[id]?.isAlive);
+    this.state.activeSpeakerPlayerId = alivePlayers[0] || null;
+    this.state.phaseTimeRemainingSec = this.state.settings.turnDurationSec;
+    this.startTimer();
+    this.broadcast();
+  }
+
+  public calculateFinalSimulation() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+
+    const survivors = Object.values(this.state.players).filter(p => p.isAlive);
     let foodScore = 0;
-    let medicalScore = 0;
+    let medScore = 0;
     let techScore = 0;
     let defenseScore = 0;
     let psychScore = 0;
 
-    survivors.forEach((s) => {
-      Object.values(s.cards).forEach((c) => {
-        if (c.card.impactScore) {
-          foodScore += c.card.impactScore.food || 0;
-          medicalScore += c.card.impactScore.medical || 0;
-          techScore += c.card.impactScore.tech || 0;
-          defenseScore += c.card.impactScore.defense || 0;
-          psychScore += c.card.impactScore.psychology || 0;
+    survivors.forEach(p => {
+      Object.values(p.cards).forEach(slot => {
+        if (slot.card?.impactScore) {
+          foodScore += slot.card.impactScore.food || 0;
+          medScore += slot.card.impactScore.medical || 0;
+          techScore += slot.card.impactScore.tech || 0;
+          defenseScore += slot.card.impactScore.defense || 0;
+          psychScore += slot.card.impactScore.psychology || 0;
         }
       });
     });
 
     const isFoodOk = foodScore >= 0;
-    const isMedOk = medicalScore >= 0;
+    const isMedOk = medScore >= 0;
     const isTechOk = techScore >= 0;
     const isPsychOk = psychScore >= 0;
 
-    const totalPassed = [isFoodOk, isMedOk, isTechOk, isPsychOk].filter(Boolean).length;
-    const isSuccess = totalPassed >= 3;
-    const survivalScore = Math.min(100, Math.max(10, Math.round((totalPassed / 4) * 85 + Math.random() * 15)));
+    const isSuccess = isFoodOk && isMedOk && isTechOk && isPsychOk;
+    const totalScore = 50 + (foodScore + medScore + techScore + defenseScore + psychScore) * 5;
 
     const result: SimulationResult = {
       isSuccess,
-      survivalScore,
+      survivalScore: Math.max(10, Math.min(100, totalScore)),
       headline: isSuccess 
-        ? "G'ALABA! Boshpana ahli omon qoldi va yangi sivilizatsiyaga asos soldi!" 
-        : "HALOKAT! Boshpana resurslar yetishmovchiligidan quladi...",
+        ? '🎉 BOSHPATHA AHLI OMON QOLDI VA SIVILIZATSIYANI TIKLADI!' 
+        : '💀 AFSUSKI, BOSHPANA ICHIDAGI INQIROZ SABAB HAMMA HALOK BO\'LDI...',
       detailedStory: isSuccess
-        ? `Boshpanada yashagan ${this.state.catastrophe?.shelterMonths || 24} oy davomida jamoa oziq-ovqat va generatorlarni to'g'ri boshqardi. Garchi ba'zi qiyinchiliklar bo'lsa-da, ${survivors.map(s => s.displayName).join(', ')} yer yuziga sog'-salomat qaytib chiqdi!`
-        : `Afsuski, bunker ichida oziq-ovqat va tibbiy ta'minot noto'g'ri taqsimlandi. Ichki nizolar va tizimlarning ishdan chiqishi tufayli bunker aholisi qiyin ahvolda qoldi.`,
+        ? `Boshpanada to'plangan ${survivors.length} nafar mutaxassis o'zlarining professional bilimlari va oqilona resurs taqsimoti evaziga ${this.state.catastrophe?.shelterMonths || 24} oylik apokalipsisni muvaffaqiyatli yengib o'tishdi.`
+        : `Tashqi apokalipsis xavfi yetmagandek, bunker ichidagi yetishmovchiliklar, epidemiyalar yoki muhim tizimlarning ishdan chiqishi tufayli bunker aholisi qiyin ahvolda qoldi.`,
       breakdown: {
         foodStatus: isFoodOk ? 'enough' : 'starvation',
         healthStatus: isMedOk ? 'healthy' : 'fatal',
@@ -379,7 +418,7 @@ export class LocalGameEngine {
         psychologicalStatus: isPsychOk ? 'peaceful' : 'civil_war',
         defenseStatus: defenseScore >= 0 ? 'secured' : 'breached'
       },
-      survivors: survivors.map((s) => ({
+      survivors: survivors.map(s => ({
         id: s.id,
         displayName: s.displayName,
         profession: s.cards.profession?.card?.title || 'Kasbi noma\'lum',
@@ -423,15 +462,17 @@ export class LocalGameEngine {
     this.broadcast();
   }
 
-  public skipCurrentPhase() {
+  public skipCurrent() {
     if (this.state.phase === 'DISASTER_INTRO') {
       this.startRoundsFromIntro();
     } else if (this.state.phase === 'ROUND_PITCH') {
-      this.startDebatePhase();
+      this.nextSpeaker(); // Advance single speaker!
     } else if (this.state.phase === 'ROUND_DEBATE') {
       this.startVotingPhase();
     } else if (this.state.phase === 'VOTING') {
       this.resolveVoting();
+    } else if (this.state.phase === 'BUNKER_EVENT') {
+      this.acknowledgeEvent();
     }
     this.broadcast();
   }

@@ -93,9 +93,14 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleSkipPhase = () => {
+  const handleSkipCurrent = () => {
     triggerHaptic('medium');
-    engine?.skipCurrentPhase();
+    engine?.skipCurrent();
+  };
+
+  const handleAcknowledgeEvent = () => {
+    triggerHaptic('medium');
+    engine?.acknowledgeEvent();
   };
 
   const handlePlayAgain = () => {
@@ -119,6 +124,9 @@ export const App: React.FC = () => {
           roomState={roomState}
           myPlayerId={myPlayerId}
           onUpdateSettings={(s) => engine?.updateSettings(s)}
+          onToggleCardExclusion={(id) => engine?.toggleCardExclusion(id)}
+          onAddDemoBot={() => engine?.addDemoBot()}
+          onRemoveDemoBot={(botId) => engine?.removeDemoBot(botId)}
           onSetReady={(r) => engine?.setReady(myPlayerId, r)}
           onStartGame={handleStartGame}
           onLeaveRoom={handleLeaveRoom}
@@ -134,8 +142,9 @@ export const App: React.FC = () => {
           onSendChatMessage={handleSendChatMessage}
           onPauseToggle={() => engine?.toggleTimerPause()}
           onAdd30Sec={() => engine?.addTimerSeconds(30)}
-          onSkipPhase={handleSkipPhase}
+          onSkipCurrent={handleSkipCurrent}
           onStartRounds={handleStartRounds}
+          onAcknowledgeEvent={handleAcknowledgeEvent}
           onPlayAgain={handlePlayAgain}
           onLeaveGame={handleLeaveRoom}
         />
