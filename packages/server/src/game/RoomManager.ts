@@ -2,9 +2,9 @@ import { Server, Socket } from 'socket.io';
 import { 
   GameRoomState, Player, RoomSettings, CardCategory, 
   SimulationResult, Catastrophe, ShelterSpecs, PlayerCardSlot,
-  ClientToServerEvents, ServerToClientEvents, DeckTheme
+  ClientToServerEvents, ServerToClientEvents, DeckTheme, BunkerEvent
 } from '@boshpana/shared';
-import { CATASTROPHES, SHELTER_SPECS_PRESETS, CARDS_DATA } from '@boshpana/shared';
+import { CATASTROPHES, SHELTER_SPECS_PRESETS, CARDS_DATA, BUNKER_EVENTS } from '@boshpana/shared';
 
 export class RoomManager {
   private io: Server<ClientToServerEvents, ServerToClientEvents>;
@@ -33,6 +33,7 @@ export class RoomManager {
       debateDurationSec: 60,
       selectedDecks: ['classic', 'uzbek'],
       allowSpecialCards: true,
+      excludedCardIds: [],
       ...payload.settings
     };
 
@@ -62,6 +63,7 @@ export class RoomManager {
       isTimerPaused: false,
       catastrophe: null,
       shelterSpecs: null,
+      currentBunkerEvent: null,
       players: { [hostId]: hostPlayer },
       playerOrder: [hostId],
       settings: defaultSettings,
@@ -157,7 +159,8 @@ export class RoomManager {
 
     // 2. Deal Cards
     const matchingCards = CARDS_DATA.filter((c) =>
-      room.settings.selectedDecks.includes(c.theme)
+      room.settings.selectedDecks.includes(c.theme) &&
+      !room.settings.excludedCardIds?.includes(c.id)
     );
     const categories: CardCategory[] = ['profession', 'biology', 'health', 'baggage', 'hobby', 'fact', 'special'];
 
@@ -300,12 +303,10 @@ export class RoomManager {
         this.broadcastRoomState(room.roomCode);
       }
     } else {
-      room.roundNumber += 1;
-      room.phase = 'ROUND_PITCH';
-      room.currentSpeakerIndex = 0;
-      const nextAlive = room.playerOrder.filter((id) => room.players[id]?.isAlive);
-      room.activeSpeakerPlayerId = nextAlive[0];
-      room.phaseTimeRemainingSec = room.settings.turnDurationSec;
+      // Surprise Bunker Event
+      const randomEvent = BUNKER_EVENTS[Math.floor(Math.random() * BUNKER_EVENTS.length)];
+      room.currentBunkerEvent = randomEvent;
+      room.phase = 'BUNKER_EVENT';
       this.broadcastRoomState(room.roomCode);
     }
   }
