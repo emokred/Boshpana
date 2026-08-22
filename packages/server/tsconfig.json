@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
+    "rootDir": "./src",
     "outDir": "./dist",
     "strict": false,
     "noImplicitAny": false,
@@ -11,7 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@boshpana/shared": ["../shared/src", "../shared/dist"]
+      "@boshpana/shared": ["../shared/dist"]
     }
   },
   "include": ["src/**/*"]
