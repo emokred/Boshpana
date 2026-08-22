@@ -6,6 +6,8 @@ import {
   HelpCircle, Shield, AlertTriangle
 } from 'lucide-react';
 import { sound } from '../../services/sound';
+import { CardArt } from './CardArt';
+import { UzbekCardFrame } from './UzbekCardFrame';
 
 interface CharacterCardProps {
   category: CardCategory;
@@ -17,69 +19,69 @@ interface CharacterCardProps {
   onUseSpecial?: () => void;
 }
 
-const CATEGORY_META: Record<CardCategory, { 
+const CATEGORY_THEME: Record<CardCategory, { 
   label: string; 
   icon: any; 
   color: string; 
+  accentHex: string;
   bgBadge: string; 
-  borderGlow: string;
-  girihColor: string;
+  titleBg: string;
 }> = {
   profession: { 
     label: 'KASB', 
     icon: Briefcase, 
     color: 'text-amber-400', 
-    bgBadge: 'bg-amber-500/20 border-amber-500/50 text-amber-300', 
-    borderGlow: 'border-amber-500/40',
-    girihColor: '#f59e0b'
+    accentHex: '#f59e0b',
+    bgBadge: 'bg-amber-500/20 border-amber-500/70 text-amber-300', 
+    titleBg: 'bg-amber-950/80 border-amber-500/60 text-amber-100'
   },
   biology: { 
     label: 'BIOLOGIYA', 
     icon: Dna, 
     color: 'text-cyan-400', 
-    bgBadge: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300', 
-    borderGlow: 'border-cyan-500/40',
-    girihColor: '#06b6d4'
+    accentHex: '#06b6d4',
+    bgBadge: 'bg-cyan-500/20 border-cyan-500/70 text-cyan-300', 
+    titleBg: 'bg-cyan-950/80 border-cyan-500/60 text-cyan-100'
   },
   health: { 
     label: 'SALOMATLIK', 
     icon: HeartPulse, 
     color: 'text-emerald-400', 
-    bgBadge: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300', 
-    borderGlow: 'border-emerald-500/40',
-    girihColor: '#10b981'
+    accentHex: '#10b981',
+    bgBadge: 'bg-emerald-500/20 border-emerald-500/70 text-emerald-300', 
+    titleBg: 'bg-emerald-950/80 border-emerald-500/60 text-emerald-100'
   },
   baggage: { 
     label: 'BAGAJ / BUYUM', 
     icon: Package, 
     color: 'text-orange-400', 
-    bgBadge: 'bg-orange-500/20 border-orange-500/50 text-orange-300', 
-    borderGlow: 'border-orange-500/40',
-    girihColor: '#f97316'
+    accentHex: '#f97316',
+    bgBadge: 'bg-orange-500/20 border-orange-500/70 text-orange-300', 
+    titleBg: 'bg-orange-950/80 border-orange-500/60 text-orange-100'
   },
   hobby: { 
     label: 'XOBBI / KO\'NIKMA', 
     icon: Sparkles, 
     color: 'text-purple-400', 
-    bgBadge: 'bg-purple-500/20 border-purple-500/50 text-purple-300', 
-    borderGlow: 'border-purple-500/40',
-    girihColor: '#a855f7'
+    accentHex: '#a855f7',
+    bgBadge: 'bg-purple-500/20 border-purple-500/70 text-purple-300', 
+    titleBg: 'bg-purple-950/80 border-purple-500/60 text-purple-100'
   },
   fact: { 
     label: 'FAKT / SIR', 
     icon: FileText, 
     color: 'text-yellow-400', 
-    bgBadge: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300', 
-    borderGlow: 'border-yellow-500/40',
-    girihColor: '#eab308'
+    accentHex: '#eab308',
+    bgBadge: 'bg-yellow-500/20 border-yellow-500/70 text-yellow-300', 
+    titleBg: 'bg-yellow-950/80 border-yellow-500/60 text-yellow-100'
   },
   special: { 
     label: 'MAXSUS QOBILIYAT', 
     icon: Zap, 
     color: 'text-hazard-orange', 
+    accentHex: '#ff4c29',
     bgBadge: 'bg-hazard-orange/25 border-hazard-orange text-hazard-orange', 
-    borderGlow: 'border-hazard-orange/60',
-    girihColor: '#ff4c29'
+    titleBg: 'bg-red-950/90 border-hazard-orange text-white'
   }
 };
 
@@ -93,13 +95,13 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   onUseSpecial
 }) => {
   const [isPeeking, setIsPeeking] = useState(false);
-  const meta = CATEGORY_META[category] || { 
+  const meta = CATEGORY_THEME[category] || { 
     label: category, 
     icon: HelpCircle, 
     color: 'text-slate-400', 
+    accentHex: '#64748b',
     bgBadge: 'bg-slate-800 text-slate-300',
-    borderGlow: 'border-slate-800',
-    girihColor: '#64748b'
+    titleBg: 'bg-slate-900 text-slate-100'
   };
   const IconComponent = meta.icon;
 
@@ -121,139 +123,131 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   };
 
   return (
-    <div className={`relative rounded-2xl p-4 transition-all duration-300 border-2 overflow-hidden group shadow-lg ${
+    <div className={`relative rounded-3xl p-3.5 sm:p-4 transition-all duration-300 flex flex-col justify-between overflow-hidden group shadow-2xl ${
       isRevealed 
-        ? `bg-bunker-900/95 ${meta.borderGlow} shadow-hazard-sm` 
+        ? 'bg-bunker-900/95 shadow-card-glow' 
         : showContent
-          ? 'bg-bunker-900 border-hazard-orange/60 shadow-hazard-md'
-          : 'bg-bunker-950/90 border-slate-800/80 hover:border-slate-700'
-    }`}>
+          ? 'bg-bunker-900 shadow-hazard-md'
+          : 'bg-bunker-950/95 hover:bg-bunker-900'
+    } min-h-[310px]`}>
       
-      {/* ================= PROMINENT UZBEK GIRIH CORNER MOTIFS ================= */}
-      {/* Top-Left Girih Star Knot */}
-      <svg className="absolute top-0 left-0 w-10 h-10 pointer-events-none opacity-60 group-hover:opacity-90 transition-opacity" viewBox="0 0 40 40" fill="none">
-        <path d="M2 2H18M2 2V18M2 2L14 14M2 10L10 2M2 18L18 2M6 2L2 6M10 10L18 18M10 18L18 10" stroke={meta.girihColor} strokeWidth="1.5" strokeLinecap="round" />
-        <polygon points="10,4 14,8 10,12 6,8" stroke={meta.girihColor} strokeWidth="1.2" fill="none" />
-      </svg>
-      {/* Top-Right Girih Star Knot */}
-      <svg className="absolute top-0 right-0 w-10 h-10 pointer-events-none opacity-60 group-hover:opacity-90 transition-opacity rotate-90" viewBox="0 0 40 40" fill="none">
-        <path d="M2 2H18M2 2V18M2 2L14 14M2 10L10 2M2 18L18 2M6 2L2 6M10 10L18 18M10 18L18 10" stroke={meta.girihColor} strokeWidth="1.5" strokeLinecap="round" />
-        <polygon points="10,4 14,8 10,12 6,8" stroke={meta.girihColor} strokeWidth="1.2" fill="none" />
-      </svg>
-      {/* Bottom-Right Girih Star Knot */}
-      <svg className="absolute bottom-0 right-0 w-10 h-10 pointer-events-none opacity-60 group-hover:opacity-90 transition-opacity rotate-180" viewBox="0 0 40 40" fill="none">
-        <path d="M2 2H18M2 2V18M2 2L14 14M2 10L10 2M2 18L18 2M6 2L2 6M10 10L18 18M10 18L18 10" stroke={meta.girihColor} strokeWidth="1.5" strokeLinecap="round" />
-        <polygon points="10,4 14,8 10,12 6,8" stroke={meta.girihColor} strokeWidth="1.2" fill="none" />
-      </svg>
-      {/* Bottom-Left Girih Star Knot */}
-      <svg className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none opacity-60 group-hover:opacity-90 transition-opacity -rotate-90" viewBox="0 0 40 40" fill="none">
-        <path d="M2 2H18M2 2V18M2 2L14 14M2 10L10 2M2 18L18 2M6 2L2 6M10 10L18 18M10 18L18 10" stroke={meta.girihColor} strokeWidth="1.5" strokeLinecap="round" />
-        <polygon points="10,4 14,8 10,12 6,8" stroke={meta.girihColor} strokeWidth="1.2" fill="none" />
-      </svg>
+      {/* ================= UZBEK ISLIMIY & SHAMSA ORNAMENTAL BORDER ================= */}
+      <UzbekCardFrame color={meta.accentHex} />
 
-      {/* Header: Category Badge & Status */}
-      <div className="flex items-center justify-between gap-2 mb-2.5 relative z-10 pl-3">
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-mono font-black uppercase tracking-widest ${meta.bgBadge}`}>
-          <IconComponent size={14} />
+      {/* ================= TOP: CATEGORY BADGE & STATUS ================= */}
+      <div className="flex items-center justify-between gap-2 relative z-20 pt-1 px-1">
+        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-widest shadow-sm ${meta.bgBadge}`}>
+          <IconComponent size={13} />
           <span>{meta.label}</span>
         </div>
 
         {/* State Indicator */}
         <div className="flex items-center gap-1">
           {isRevealed ? (
-            <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-950/90 text-emerald-400 border border-emerald-700/60 flex items-center gap-1">
+            <span className="text-[9px] uppercase font-mono font-black px-2 py-0.5 rounded-md bg-emerald-950/90 text-emerald-400 border border-emerald-700/60 flex items-center gap-1 shadow-sm">
               <Unlock size={10} /> Ochiq
             </span>
           ) : (
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 flex items-center gap-1">
+            <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 flex items-center gap-1">
               <Lock size={10} /> Maxfiy
             </span>
           )}
         </div>
       </div>
 
-      {/* Card Body & Title */}
-      {showContent ? (
-        <div className="space-y-2 relative z-10 animate-fadeIn min-h-[85px] flex flex-col justify-center py-1">
-          <div className="flex items-start gap-2.5">
-            <div className={`w-8 h-8 rounded-xl bg-bunker-950 border flex items-center justify-center flex-shrink-0 mt-0.5 ${meta.borderGlow} ${meta.color}`}>
-              <IconComponent size={18} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h4 className="text-sm sm:text-base font-black text-slate-100 leading-tight">
-                {card.title}
-              </h4>
-              {card.theme && (
-                <span className="inline-block mt-0.5 text-[9px] font-mono uppercase text-slate-400 px-1.5 py-0.2 rounded bg-bunker-950 border border-slate-800">
-                  {card.theme === 'uzbek' ? '🇺🇿 O\'zbekona' : card.theme === 'nsfw18' ? '🔴 18+ Qora' : '🟢 Klassik'}
-                </span>
-              )}
-            </div>
+      {/* ================= CENTER: LARGE GRAPHICAL CARD ART ================= */}
+      <div className="relative z-20 flex-1 flex flex-col items-center justify-center my-1.5 px-1">
+        {showContent ? (
+          <div className="w-full flex flex-col items-center animate-fadeIn">
+            <CardArt
+              cardId={card.id}
+              category={category}
+              title={card.title}
+              color={meta.accentHex}
+              isRevealed={isRevealed}
+            />
+
+            {/* Disaster specific badge if any */}
+            {card.disasterSpecificId && (
+              <div className="mt-1 flex items-center gap-1 text-[9px] font-mono text-amber-300 bg-amber-950/70 px-2 py-0.5 rounded-md border border-amber-800/60">
+                <AlertTriangle size={10} />
+                <span>Falokatga mos maxsus karta!</span>
+              </div>
+            )}
           </div>
-
-          {card.description && (
-            <p className="text-xs text-slate-300 leading-relaxed pl-10 border-l border-slate-800/80 mt-1">
-              {card.description}
-            </p>
-          )}
-
-          {/* Disaster specific badge if any */}
-          {card.disasterSpecificId && (
-            <div className="mt-1 flex items-center gap-1 text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
-              <AlertTriangle size={11} />
-              <span>Falokatga mos maxsus karta!</span>
+        ) : (
+          <div className="py-10 flex flex-col items-center justify-center text-center space-y-2">
+            <div 
+              className="w-16 h-16 rounded-2xl bg-bunker-950 border-2 flex items-center justify-center text-slate-600 group-hover:text-slate-400 group-hover:border-slate-700 transition-colors shadow-inner"
+              style={{ borderColor: `${meta.accentHex}40` }}
+            >
+              <Lock size={28} style={{ color: `${meta.accentHex}90` }} />
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="py-7 flex flex-col items-center justify-center text-center relative z-10 space-y-1.5">
-          <div className="w-12 h-12 rounded-2xl bg-bunker-950 border-2 border-slate-800 flex items-center justify-center text-slate-600 group-hover:text-slate-400 group-hover:border-slate-700 transition-colors">
-            <Lock size={22} />
+            <p className="text-[11px] text-slate-500 font-mono tracking-wider uppercase">Karta yashirin</p>
           </div>
-          <p className="text-xs text-slate-500 font-mono">Karta yashirin holda</p>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Action Buttons for Owner */}
-      {isOwner && !isRevealed && (
-        <div className="mt-3 pt-2.5 border-t border-slate-800/90 flex items-center justify-between gap-2 relative z-10">
-          {/* Peek button */}
-          <button
-            type="button"
-            onClick={handleTogglePeek}
-            className="px-3 py-2 rounded-xl text-xs font-semibold bg-bunker-800 hover:bg-bunker-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-          >
-            {isPeeking ? <EyeOff size={14} className="text-amber-400" /> : <Eye size={14} className="text-cyan-400" />}
-            <span>{isPeeking ? 'Yopish' : 'Maxfiy Ko\'rish'}</span>
-          </button>
+      {/* ================= BOTTOM: BOLD PUNCHY TITLE BANNER ================= */}
+      <div className="relative z-20 space-y-2 px-1">
+        {showContent ? (
+          <div className={`p-2.5 rounded-2xl border-2 text-center shadow-lg transition-transform ${meta.titleBg}`}>
+            <h4 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-snug drop-shadow-md">
+              {card.title}
+            </h4>
+            {card.description && (
+              <p className="text-[10px] sm:text-[11px] text-slate-300/90 font-medium leading-tight mt-1 line-clamp-2">
+                {card.description}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="p-2.5 rounded-2xl border border-slate-800 bg-bunker-950/80 text-center">
+            <span className="text-[11px] text-slate-600 font-mono uppercase">??? [Yashirin] ???</span>
+          </div>
+        )}
 
-          {/* Reveal button */}
-          {canReveal && (
+        {/* Owner Controls (Peek / Reveal) */}
+        {isOwner && !isRevealed && (
+          <div className="pt-1 flex items-center justify-between gap-2">
+            {/* Peek button */}
             <button
               type="button"
-              onClick={handleReveal}
-              className="flex-1 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-1.5 shadow-hazard-md transition-all active:scale-95 animate-pulse"
+              onClick={handleTogglePeek}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-bunker-800 hover:bg-bunker-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
             >
-              <Unlock size={14} />
-              <span>Hammaga Ochish</span>
+              {isPeeking ? <EyeOff size={13} className="text-amber-400" /> : <Eye size={13} className="text-cyan-400" />}
+              <span>{isPeeking ? 'Yopish' : 'Ko\'rish'}</span>
             </button>
-          )}
-        </div>
-      )}
 
-      {/* Special Card Trigger Button */}
-      {isOwner && category === 'special' && isRevealed && onUseSpecial && (
-        <div className="mt-3 pt-2 border-t border-hazard-orange/40 relative z-10">
-          <button
-            type="button"
-            onClick={onUseSpecial}
-            className="w-full py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider bg-hazard-orange/20 hover:bg-hazard-orange/30 text-hazard-orange border border-hazard-orange/60 flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
-          >
-            <Zap size={15} />
-            <span>Qobiliyatni Ishga Tushirish</span>
-          </button>
-        </div>
-      )}
+            {/* Reveal button */}
+            {canReveal && (
+              <button
+                type="button"
+                onClick={handleReveal}
+                className="flex-1 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-1 shadow-hazard-md transition-all active:scale-95 animate-pulse"
+              >
+                <Unlock size={13} />
+                <span>Hammaga Ochish</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Special Card Trigger Action */}
+        {isOwner && category === 'special' && isRevealed && onUseSpecial && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={onUseSpecial}
+              className="w-full py-1.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider bg-hazard-orange/20 hover:bg-hazard-orange/30 text-hazard-orange border border-hazard-orange/60 flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
+            >
+              <Zap size={14} />
+              <span>Qobiliyatni Ishga Tushirish</span>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
