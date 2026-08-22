@@ -1,17 +1,19 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import { Server as SocketIOServer } from 'socket.io';
 import { Bot, InlineKeyboard } from 'grammy';
 import { ClientToServerEvents, ServerToClientEvents } from '@boshpana/shared';
 import { RoomManager } from './game/RoomManager';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const WEBAPP_URL = process.env.WEBAPP_URL || 'http://127.0.0.1:4173';
+const WEBAPP_URL = process.env.WEBAPP_URL || process.env.RENDER_EXTERNAL_URL || 'http://127.0.0.1:4173';
 
 async function bootstrap() {
   const fastify = Fastify({ logger: true });
@@ -20,6 +22,19 @@ async function bootstrap() {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   });
+
+  // Serve static client bundle if built
+  const clientDistPath = path.resolve(__dirname, '../../client/dist');
+  if (fs.existsSync(clientDistPath)) {
+    await fastify.register(fastifyStatic, {
+      root: clientDistPath,
+      prefix: '/'
+    });
+
+    fastify.setNotFoundHandler((req, reply) => {
+      reply.sendFile('index.html');
+    });
+  }
 
   fastify.get('/health', async () => {
     return { status: 'ok', botActive: !!BOT_TOKEN, time: new Date().toISOString() };
@@ -63,14 +78,13 @@ async function bootstrap() {
       // /start handler
       bot.command('start', async (ctx) => {
         const startParam = ctx.match; // e.g. /start room_BOSH-123
-        const gameUrl = startParam ? `${WEBAPP_URL}?room=${startParam.replace('room_', '')}` : WEBAPP_URL;
+        const targetUrl = WEBAPP_URL.startsWith('http') ? WEBAPP_URL : `https://${WEBAPP_URL}`;
+        const gameUrl = startParam ? `${targetUrl}?room=${startParam.replace('room_', '')}` : targetUrl;
 
         const keyboard = new InlineKeyboard()
           .webApp('🕹 Boshpanani Boshlash (O\'yin)', gameUrl)
           .row()
-          .url('👥 Guruhga Qo\'shish', `https://t.me/${ctx.me.username}?startgroup=true`)
-          .row()
-          .url('📢 Rasmiy Kanal', 'https://t.me/boshpana_game');
+          .url('👥 Guruhga Qo\'shish', `https://t.me/${ctx.me.username}?startgroup=true`);
 
         await ctx.reply(
           `🚨 <b>BOSHPANA | O'zbekcha Bunker O'yiniga Xush Kelibsiz!</b>\n\n` +
@@ -101,7 +115,8 @@ async function bootstrap() {
 
       // /boshpana or /game
       bot.command(['boshpana', 'game'], async (ctx) => {
-        const keyboard = new InlineKeyboard().webApp('🚀 Xonani Ochish', WEBAPP_URL);
+        const targetUrl = WEBAPP_URL.startsWith('http') ? WEBAPP_URL : `https://${WEBAPP_URL}`;
+        const keyboard = new InlineKeyboard().webApp('🚀 Xonani Ochish', targetUrl);
         await ctx.reply(`🚪 <b>Boshpana eshiklari ochilmoqda...</b>\n\nDo'stlaringiz bilan birga o'ynash uchun xonaga kiring:`, {
           parse_mode: 'HTML',
           reply_markup: keyboard
