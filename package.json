@@ -10,7 +10,7 @@
     "dev": "npm run dev --workspaces",
     "dev:client": "npm run dev --workspace=@boshpana/client",
     "dev:server": "npm run dev --workspace=@boshpana/server",
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace=@boshpana/shared && npm run build --workspace=@boshpana/client && npm run build --workspace=@boshpana/server",
     "start": "npm run start --workspace=@boshpana/server",
     "test": "npm run test --workspaces"
   },

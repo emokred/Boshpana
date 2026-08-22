@@ -1,9 +1,9 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Bot, InlineKeyboard } from 'grammy';
-import { ClientToServerEvents, ServerToClientEvents } from '@boshpana/shared';
+import { ClientToServerEvents, ServerToClientEvents, CardCategory, RoomSettings } from '@boshpana/shared';
 import { RoomManager } from './game/RoomManager';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -50,15 +50,15 @@ async function bootstrap() {
 
   const roomManager = new RoomManager(io);
 
-  io.on('connection', (socket) => {
-    socket.on('createRoom', (payload, cb) => roomManager.createRoom(socket, payload, cb));
-    socket.on('joinRoom', (payload, cb) => roomManager.joinRoom(socket, payload, cb));
-    socket.on('updateSettings', (settings) => roomManager.updateSettings(socket, settings));
-    socket.on('setReady', (isReady) => roomManager.setReady(socket, isReady));
+  io.on('connection', (socket: Socket) => {
+    socket.on('createRoom', (payload: any, cb: any) => roomManager.createRoom(socket, payload, cb));
+    socket.on('joinRoom', (payload: any, cb: any) => roomManager.joinRoom(socket, payload, cb));
+    socket.on('updateSettings', (settings: Partial<RoomSettings>) => roomManager.updateSettings(socket, settings));
+    socket.on('setReady', (isReady: boolean) => roomManager.setReady(socket, isReady));
     socket.on('startGame', () => roomManager.startGame(socket));
-    socket.on('revealCard', (cat) => roomManager.revealCard(socket, cat));
+    socket.on('revealCard', (cat: CardCategory) => roomManager.revealCard(socket, cat));
     socket.on('endPitchTurn', () => roomManager.endPitchTurn(socket));
-    socket.on('castVote', (targetId) => roomManager.castVote(socket, targetId));
+    socket.on('castVote', (targetId: string) => roomManager.castVote(socket, targetId));
     socket.on('disconnect', () => roomManager.handleDisconnect(socket));
   });
 

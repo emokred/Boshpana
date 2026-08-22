@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { 
   GameRoomState, Player, RoomSettings, CardCategory, 
   SimulationResult, Catastrophe, ShelterSpecs, PlayerCardSlot,
-  ClientToServerEvents, ServerToClientEvents, DeckTheme, BunkerEvent
+  ClientToServerEvents, ServerToClientEvents, DeckTheme, BunkerEvent, CardItem
 } from '@boshpana/shared';
 import { CATASTROPHES, SHELTER_SPECS_PRESETS, CARDS_DATA, BUNKER_EVENTS } from '@boshpana/shared';
 
@@ -46,7 +46,7 @@ export class RoomManager {
       isHost: true,
       isReady: true,
       isAlive: true,
-      cards: {} as any,
+      cards: {} as Record<CardCategory, PlayerCardSlot>,
       hasUsedSpecialCard: false,
       hasVoted: false,
       receivedVotesCount: 0
@@ -109,7 +109,7 @@ export class RoomManager {
       isHost: false,
       isReady: false,
       isAlive: true,
-      cards: {} as any,
+      cards: {} as Record<CardCategory, PlayerCardSlot>,
       hasUsedSpecialCard: false,
       hasVoted: false,
       receivedVotesCount: 0
@@ -151,26 +151,26 @@ export class RoomManager {
     if (Object.keys(room.players).length < 2) return;
 
     // 1. Pick Catastrophe & Shelter
-    const matchingCatastrophes = CATASTROPHES.filter((c) =>
+    const matchingCatastrophes = CATASTROPHES.filter((c: Catastrophe) =>
       room.settings.selectedDecks.includes(c.theme)
     );
     room.catastrophe = matchingCatastrophes[Math.floor(Math.random() * matchingCatastrophes.length)] || CATASTROPHES[0];
     room.shelterSpecs = SHELTER_SPECS_PRESETS[Math.floor(Math.random() * SHELTER_SPECS_PRESETS.length)];
 
     // 2. Deal Cards
-    const matchingCards = CARDS_DATA.filter((c) =>
+    const matchingCards = CARDS_DATA.filter((c: CardItem) =>
       room.settings.selectedDecks.includes(c.theme) &&
       !room.settings.excludedCardIds?.includes(c.id)
     );
     const categories: CardCategory[] = ['profession', 'biology', 'health', 'baggage', 'hobby', 'fact', 'special'];
 
-    Object.values(room.players).forEach((player) => {
-      const playerCards: Record<CardCategory, PlayerCardSlot> = {} as any;
-      categories.forEach((cat) => {
-        const catCards = matchingCards.filter((c) => c.category === cat);
-        const card = catCards.length > 0
+    (Object.values(room.players) as Player[]).forEach((player: Player) => {
+      const playerCards: Record<CardCategory, PlayerCardSlot> = {} as Record<CardCategory, PlayerCardSlot>;
+      categories.forEach((cat: CardCategory) => {
+        const catCards = matchingCards.filter((c: CardItem) => c.category === cat);
+        const card: CardItem = catCards.length > 0
           ? catCards[Math.floor(Math.random() * catCards.length)]
-          : CARDS_DATA.find((c) => c.category === cat)!;
+          : (CARDS_DATA.find((c: CardItem) => c.category === cat) as CardItem);
 
         playerCards[cat] = {
           category: cat,
@@ -199,7 +199,6 @@ export class RoomManager {
 
     const player = room.players[socket.id];
     if (player && player.cards[category]) {
-      // In Round 1, only profession allowed; in Round 2+, any unrevealed allowed
       if (room.roundNumber === 1 && category !== 'profession') return;
 
       player.cards[category].isRevealed = true;
@@ -227,7 +226,7 @@ export class RoomManager {
   }
 
   private nextSpeaker(room: GameRoomState) {
-    const aliveOrder = room.playerOrder.filter((id) => room.players[id]?.isAlive);
+    const aliveOrder = room.playerOrder.filter((id: string) => room.players[id]?.isAlive);
     const nextIndex = room.currentSpeakerIndex + 1;
 
     if (nextIndex < aliveOrder.length) {
@@ -235,7 +234,6 @@ export class RoomManager {
       room.activeSpeakerPlayerId = aliveOrder[nextIndex];
       room.phaseTimeRemainingSec = room.settings.turnDurationSec;
     } else {
-      // Move to Debate Phase
       room.phase = 'ROUND_DEBATE';
       room.activeSpeakerPlayerId = null;
       room.phaseTimeRemainingSec = room.settings.debateDurationSec;
@@ -255,8 +253,8 @@ export class RoomManager {
       voter.votedForPlayerId = targetPlayerId;
       target.receivedVotesCount = (target.receivedVotesCount || 0) + 1;
 
-      const alivePlayers = Object.values(room.players).filter((p) => p.isAlive);
-      const allVoted = alivePlayers.every((p) => p.hasVoted);
+      const alivePlayers = (Object.values(room.players) as Player[]).filter((p: Player) => p.isAlive);
+      const allVoted = alivePlayers.every((p: Player) => p.hasVoted);
 
       if (allVoted) {
         this.resolveVoting(room);
@@ -267,11 +265,11 @@ export class RoomManager {
   }
 
   private resolveVoting(room: GameRoomState) {
-    const alivePlayers = Object.values(room.players).filter((p) => p.isAlive);
+    const alivePlayers = (Object.values(room.players) as Player[]).filter((p: Player) => p.isAlive);
     let maxVotes = -1;
     let eliminatedPlayer: Player | null = null;
 
-    alivePlayers.forEach((p) => {
+    alivePlayers.forEach((p: Player) => {
       if (p.receivedVotesCount > maxVotes) {
         maxVotes = p.receivedVotesCount;
         eliminatedPlayer = p;
@@ -292,10 +290,10 @@ export class RoomManager {
       });
     }
 
-    const remainingAlive = Object.values(room.players).filter((p) => p.isAlive);
+    const remainingAlive = (Object.values(room.players) as Player[]).filter((p: Player) => p.isAlive);
 
     if (remainingAlive.length <= room.settings.targetSurvivors) {
-      room.survivorPlayerIds = remainingAlive.map((p) => p.id);
+      room.survivorPlayerIds = remainingAlive.map((p: Player) => p.id);
       if (room.settings.finalSimulation) {
         this.runEndingSimulation(room);
       } else {
@@ -303,7 +301,6 @@ export class RoomManager {
         this.broadcastRoomState(room.roomCode);
       }
     } else {
-      // Surprise Bunker Event
       const randomEvent = BUNKER_EVENTS[Math.floor(Math.random() * BUNKER_EVENTS.length)];
       room.currentBunkerEvent = randomEvent;
       room.phase = 'BUNKER_EVENT';
@@ -312,11 +309,11 @@ export class RoomManager {
   }
 
   private runEndingSimulation(room: GameRoomState) {
-    const survivors = Object.values(room.players).filter((p) => p.isAlive);
+    const survivors = (Object.values(room.players) as Player[]).filter((p: Player) => p.isAlive);
     let foodScore = 0, medicalScore = 0, techScore = 0, defenseScore = 0, psychScore = 0;
 
-    survivors.forEach((s) => {
-      Object.values(s.cards).forEach((c) => {
+    survivors.forEach((s: Player) => {
+      (Object.values(s.cards) as PlayerCardSlot[]).forEach((c: PlayerCardSlot) => {
         if (c.card.impactScore) {
           foodScore += c.card.impactScore.food || 0;
           medicalScore += c.card.impactScore.medical || 0;
@@ -352,7 +349,7 @@ export class RoomManager {
         psychologicalStatus: isPsychOk ? 'peaceful' : 'civil_war',
         defenseStatus: defenseScore >= 0 ? 'secured' : 'breached'
       },
-      survivors: survivors.map((s) => ({
+      survivors: survivors.map((s: Player) => ({
         id: s.id,
         displayName: s.displayName,
         profession: s.cards.profession?.card?.title || 'Kasbi noma\'lum',
@@ -372,7 +369,7 @@ export class RoomManager {
     const room = this.rooms.get(roomCode);
     if (room) {
       delete room.players[socket.id];
-      room.playerOrder = room.playerOrder.filter((id) => id !== socket.id);
+      room.playerOrder = room.playerOrder.filter((id: string) => id !== socket.id);
 
       if (room.hostId === socket.id && room.playerOrder.length > 0) {
         room.hostId = room.playerOrder[0];
