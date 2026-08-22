@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../../services/sound';
 import { CardArt } from './CardArt';
-import { UzbekCardFrame } from './UzbekCardFrame';
+import { IkatCardBorder } from './IkatCardBorder';
 
 interface CharacterCardProps {
   category: CardCategory;
@@ -123,39 +123,39 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   };
 
   return (
-    <div className={`relative rounded-3xl p-3 sm:p-4 transition-all duration-300 flex flex-col justify-between overflow-hidden group shadow-2xl ${
+    <div className={`relative rounded-2xl p-3 sm:p-3.5 transition-all duration-300 flex flex-col justify-between overflow-hidden group shadow-2xl ${
       isRevealed 
         ? 'bg-bunker-900/95 shadow-card-glow border border-slate-700/50' 
         : showContent
           ? 'bg-bunker-900 shadow-hazard-md border border-hazard-orange/40'
           : 'bg-bunker-950/95 border border-slate-800/80 hover:border-slate-700'
-    } min-h-[290px]`}>
+    } aspect-[2/3] max-w-[280px] mx-auto w-full`}>
       
-      {/* Uzbek Islimiy / Shamsa Border Frame */}
-      <UzbekCardFrame color={meta.accentHex} />
+      {/* Uzbek Authentic Ikat / Khan-Atlas Pattern Border */}
+      <IkatCardBorder category={category} color={meta.accentHex} />
 
       {/* TOP: Category Badge & Status */}
       <div className="flex items-center justify-between gap-2 relative z-20 pt-1 px-1">
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-widest shadow-sm ${meta.bgBadge}`}>
-          <IconComponent size={13} />
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-widest shadow-sm ${meta.bgBadge}`}>
+          <IconComponent size={12} />
           <span>{meta.label}</span>
         </div>
 
         {/* State Indicator */}
         <div className="flex items-center gap-1">
           {isRevealed ? (
-            <span className="text-[9px] uppercase font-mono font-black px-2 py-0.5 rounded-md bg-emerald-950/90 text-emerald-400 border border-emerald-700/60 flex items-center gap-1 shadow-sm">
-              <Unlock size={10} /> Ochiq
+            <span className="text-[9px] uppercase font-mono font-black px-1.5 py-0.5 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-700/60 flex items-center gap-1 shadow-sm">
+              <Unlock size={9} /> Ochiq
             </span>
           ) : (
-            <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 flex items-center gap-1">
-              <Lock size={10} /> Maxfiy
+            <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800 flex items-center gap-1">
+              <Lock size={9} /> Maxfiy
             </span>
           )}
         </div>
       </div>
 
-      {/* CENTER: Fixed-Size Uniform Card Art (No Description Clutter) */}
+      {/* CENTER: Real-world Proportion Thematic Card Graphic */}
       <div className="relative z-20 flex-1 flex flex-col items-center justify-center my-1 px-1">
         {showContent ? (
           <div className="w-full flex flex-col items-center animate-fadeIn">
@@ -169,48 +169,48 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
             {/* Disaster specific badge if any */}
             {card.disasterSpecificId && (
-              <div className="mt-1 flex items-center gap-1 text-[9px] font-mono text-amber-300 bg-amber-950/70 px-2 py-0.5 rounded-md border border-amber-800/60">
-                <AlertTriangle size={10} />
+              <div className="mt-1 flex items-center gap-1 text-[8px] font-mono text-amber-300 bg-amber-950/70 px-1.5 py-0.5 rounded border border-amber-800/60">
+                <AlertTriangle size={9} />
                 <span>Falokatga mos!</span>
               </div>
             )}
           </div>
         ) : (
-          <div className="py-8 flex flex-col items-center justify-center text-center space-y-2">
+          <div className="py-6 flex flex-col items-center justify-center text-center space-y-2">
             <div 
-              className="w-16 h-16 rounded-2xl bg-bunker-950 border-2 flex items-center justify-center text-slate-600 group-hover:text-slate-400 group-hover:border-slate-700 transition-colors shadow-inner"
+              className="w-14 h-14 rounded-2xl bg-bunker-950 border-2 flex items-center justify-center text-slate-600 group-hover:text-slate-400 group-hover:border-slate-700 transition-colors shadow-inner"
               style={{ borderColor: `${meta.accentHex}40` }}
             >
-              <Lock size={28} style={{ color: `${meta.accentHex}90` }} />
+              <Lock size={24} style={{ color: `${meta.accentHex}90` }} />
             </div>
-            <p className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Yashirin Karta</p>
+            <p className="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Yashirin Karta</p>
           </div>
         )}
       </div>
 
-      {/* BOTTOM: Bold Clean Title Banner (No long description text) */}
-      <div className="relative z-20 space-y-2 px-1">
+      {/* BOTTOM: Bold Punchy Title Banner */}
+      <div className="relative z-20 space-y-1.5 px-1 pb-0.5">
         {showContent ? (
-          <div className={`p-2.5 rounded-2xl border-2 text-center shadow-lg transition-transform ${meta.titleBg}`}>
-            <h4 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-snug drop-shadow-md">
+          <div className={`p-2 rounded-xl border-2 text-center shadow-lg transition-transform ${meta.titleBg}`}>
+            <h4 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-tight drop-shadow-md">
               {card.title}
             </h4>
           </div>
         ) : (
-          <div className="p-2.5 rounded-2xl border border-slate-800 bg-bunker-950/80 text-center">
-            <span className="text-[11px] text-slate-600 font-mono uppercase tracking-widest">??? [Yashirin] ???</span>
+          <div className="p-2 rounded-xl border border-slate-800 bg-bunker-950/80 text-center">
+            <span className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">??? [Yashirin] ???</span>
           </div>
         )}
 
         {/* Owner Controls (Peek / Reveal) */}
         {isOwner && !isRevealed && (
-          <div className="pt-1 flex items-center justify-between gap-2">
+          <div className="pt-0.5 flex items-center justify-between gap-1.5">
             <button
               type="button"
               onClick={handleTogglePeek}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-bunker-800 hover:bg-bunker-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-bunker-800 hover:bg-bunker-700 text-slate-200 border border-slate-700 flex items-center gap-1 transition-all active:scale-95 shadow-sm"
             >
-              {isPeeking ? <EyeOff size={13} className="text-amber-400" /> : <Eye size={13} className="text-cyan-400" />}
+              {isPeeking ? <EyeOff size={12} className="text-amber-400" /> : <Eye size={12} className="text-cyan-400" />}
               <span>{isPeeking ? 'Yopish' : 'Ko\'rish'}</span>
             </button>
 
@@ -218,10 +218,10 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
               <button
                 type="button"
                 onClick={handleReveal}
-                className="flex-1 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-1 shadow-hazard-md transition-all active:scale-95 animate-pulse"
+                className="flex-1 px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-1 shadow-hazard-md transition-all active:scale-95 animate-pulse"
               >
-                <Unlock size={13} />
-                <span>Hammaga Ochish</span>
+                <Unlock size={12} />
+                <span>Ochish</span>
               </button>
             )}
           </div>
@@ -229,14 +229,14 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
         {/* Special Card Trigger Action */}
         {isOwner && category === 'special' && isRevealed && onUseSpecial && (
-          <div className="pt-1">
+          <div className="pt-0.5">
             <button
               type="button"
               onClick={onUseSpecial}
-              className="w-full py-1.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider bg-hazard-orange/20 hover:bg-hazard-orange/30 text-hazard-orange border border-hazard-orange/60 flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
+              className="w-full py-1 px-2 rounded-lg text-[11px] font-black uppercase tracking-wider bg-hazard-orange/20 hover:bg-hazard-orange/30 text-hazard-orange border border-hazard-orange/60 flex items-center justify-center gap-1 transition-all active:scale-95 shadow-sm"
             >
-              <Zap size={14} />
-              <span>Qobiliyatni Ishlatish</span>
+              <Zap size={12} />
+              <span>Qobiliyat</span>
             </button>
           </div>
         )}

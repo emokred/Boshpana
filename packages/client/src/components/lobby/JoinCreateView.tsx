@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, ArrowRight, Play, Printer } from 'lucide-react';
+import { Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, ArrowRight, Play, Printer, Smartphone, MessageSquare } from 'lucide-react';
 import { sound } from '../../services/sound';
 
 interface JoinCreateViewProps {
@@ -8,6 +8,7 @@ interface JoinCreateViewProps {
   onCreateRoom: (name: string) => void;
   onJoinRoom: (roomCode: string, name: string) => void;
   onOpenPrintView?: () => void;
+  onOpenPassAndPlay?: () => void;
 }
 
 export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
@@ -15,7 +16,8 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
   initialRoomCode = '',
   onCreateRoom,
   onJoinRoom,
-  onOpenPrintView
+  onOpenPrintView,
+  onOpenPassAndPlay
 }) => {
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState(initialName || 'Omon Qoluvchi');
@@ -219,6 +221,86 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
             </button>
           </form>
         )}
+      </div>
+
+      {/* ================= 4 TA O'YIN REJIMI TANLOVI ================= */}
+      <div className="space-y-3 pt-2">
+        <h3 className="text-xs font-mono font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+          <Sparkles size={14} className="text-hazard-orange" />
+          <span>O'yin Rejimini Tanlang:</span>
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Rejim 1: Bitta Telefon (Qo'lma-qo'l - Spyfall) */}
+          {onOpenPassAndPlay && (
+            <button
+              type="button"
+              onClick={onOpenPassAndPlay}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-hazard-orange/20 to-bunker-900 border-2 border-hazard-orange/60 hover:border-hazard-orange text-left space-y-1.5 transition-all shadow-md active:scale-98 group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-white uppercase flex items-center gap-1.5">
+                  <Smartphone size={15} className="text-hazard-orange" />
+                  <span>📱 Bitta Telefon (Qo'lma-qo'l)</span>
+                </span>
+                <span className="text-[9px] font-mono uppercase bg-hazard-orange text-white px-1.5 py-0.5 rounded font-bold">
+                  TAVSIYA!
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-tight">
+                Davrada faqat 1 ta telefon qo'lma-qo'l o'tadi (Spyfall uslubida). Internetsiz ham o'ynash mumkin!
+              </p>
+            </button>
+          )}
+
+          {/* Rejim 2: Jonli Davra (Gibrid / Real Hayot) */}
+          <div className="p-3.5 rounded-2xl bg-bunker-900/90 border border-slate-800 text-left space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-200 uppercase flex items-center gap-1.5">
+                <Users size={15} className="text-emerald-400" />
+                <span>🎲 Jonli Davra (Gibrid)</span>
+              </span>
+              <span className="text-[9px] font-mono uppercase bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded">
+                Stol O'yini
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-tight">
+              Kartalarni har kim o'z telefonida ko'radi, gapirish va muhokama 100% real hayotda davrada bo'ladi!
+            </p>
+          </div>
+
+          {/* Rejim 3: To'liq Online (TMA) */}
+          <div className="p-3.5 rounded-2xl bg-bunker-900/90 border border-slate-800 text-left space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-200 uppercase flex items-center gap-1.5">
+                <Sparkles size={15} className="text-cyan-400" />
+                <span>🌐 To'liq Online (TMA)</span>
+              </span>
+              <span className="text-[9px] font-mono uppercase bg-cyan-950 text-cyan-400 border border-cyan-800 px-1.5 py-0.5 rounded">
+                Real vaqt
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-tight">
+              Barchasi Telegram WebApp ichida: jonli vaqt taymeri, chat, reaksiyalar va anonim ovoz berish.
+            </p>
+          </div>
+
+          {/* Rejim 4: Telegram Guruh (Mafia Bot) */}
+          <div className="p-3.5 rounded-2xl bg-bunker-900/90 border border-slate-800 text-left space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-200 uppercase flex items-center gap-1.5">
+                <MessageSquare size={15} className="text-purple-400" />
+                <span>👥 Guruh Rejimi (Mafia Bot)</span>
+              </span>
+              <span className="text-[9px] font-mono uppercase bg-purple-950 text-purple-400 border border-purple-800 px-1.5 py-0.5 rounded">
+                Telegram Guruh
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-tight">
+              Telegram guruhga botni qo'shib, guruh chatida va guruh ovozli qo'ng'irog'ida o'ynash!
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Rules Modal */}
