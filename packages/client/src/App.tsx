@@ -5,6 +5,7 @@ import { LocalGameEngine } from './services/localGameEngine';
 import { JoinCreateView } from './components/lobby/JoinCreateView';
 import { LobbyView } from './components/lobby/LobbyView';
 import { GameBoardView } from './components/game/GameBoardView';
+import { DeckPrintView } from './components/export/DeckPrintView';
 
 export const App: React.FC = () => {
   const { tgUser, startParam, triggerHaptic } = useTelegram();
@@ -12,6 +13,7 @@ export const App: React.FC = () => {
   const [roomState, setRoomState] = useState<GameRoomState | null>(null);
   const [myPlayerId, setMyPlayerId] = useState<string>('');
   const [initialRoomCode, setInitialRoomCode] = useState<string>('');
+  const [isPrintViewOpen, setIsPrintViewOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -110,6 +112,10 @@ export const App: React.FC = () => {
     }
   };
 
+  if (isPrintViewOpen) {
+    return <DeckPrintView onBack={() => setIsPrintViewOpen(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-bunker-950 text-slate-100 bunker-grid relative scanlines">
       {!roomState ? (
@@ -118,6 +124,7 @@ export const App: React.FC = () => {
           initialRoomCode={initialRoomCode}
           onCreateRoom={handleCreateRoom}
           onJoinRoom={handleJoinRoom}
+          onOpenPrintView={() => setIsPrintViewOpen(true)}
         />
       ) : roomState.phase === 'LOBBY' ? (
         <LobbyView

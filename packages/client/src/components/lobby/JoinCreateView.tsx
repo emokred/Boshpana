@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, ArrowRight, Play } from 'lucide-react';
+import { Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, ArrowRight, Play, Printer } from 'lucide-react';
 import { sound } from '../../services/sound';
 
 interface JoinCreateViewProps {
@@ -7,13 +7,15 @@ interface JoinCreateViewProps {
   initialRoomCode?: string;
   onCreateRoom: (name: string) => void;
   onJoinRoom: (roomCode: string, name: string) => void;
+  onOpenPrintView?: () => void;
 }
 
 export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
   initialName = '',
   initialRoomCode = '',
   onCreateRoom,
-  onJoinRoom
+  onJoinRoom,
+  onOpenPrintView
 }) => {
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState(initialName || 'Omon Qoluvchi');
@@ -63,22 +65,37 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowRules(true)}
-            className="p-2 rounded-lg bg-bunker-900 hover:bg-bunker-800 text-slate-300 border border-slate-800 text-xs flex items-center gap-1 transition-colors"
-          >
-            <BookOpen size={14} className="text-cyan-400" />
-            <span className="hidden sm:inline">Qoidalar</span>
-          </button>
+          {onOpenPrintView && (
+            <button
+              type="button"
+              onClick={onOpenPrintView}
+              className="px-2.5 py-1.5 rounded-xl bg-bunker-900 hover:bg-bunker-800 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+              title="Stol o'yini kartalarini chop etish (PDF)"
+            >
+              <Printer size={14} />
+              <span className="hidden sm:inline">Chop Etish (PDF)</span>
+            </button>
+          )}
 
           <button
             type="button"
             onClick={handleToggleSound}
-            className="p-2 rounded-lg bg-bunker-900 hover:bg-bunker-800 text-slate-300 border border-slate-800 text-xs transition-colors"
+            className="p-2 rounded-xl bg-bunker-900 hover:bg-bunker-800 text-slate-300 border border-slate-800 transition-colors"
             title={isMuted ? "Ovozni yoqish" : "Ovozni o'chirish"}
           >
-            {isMuted ? <VolumeX size={15} className="text-red-400" /> : <Volume2 size={15} className="text-emerald-400" />}
+            {isMuted ? <VolumeX size={16} className="text-red-400" /> : <Volume2 size={16} className="text-emerald-400" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              sound.playClick();
+              setShowRules(true);
+            }}
+            className="p-2 rounded-xl bg-bunker-900 hover:bg-bunker-800 text-slate-300 border border-slate-800 transition-colors"
+            title="Qoidalar"
+          >
+            <BookOpen size={16} />
           </button>
         </div>
       </div>
