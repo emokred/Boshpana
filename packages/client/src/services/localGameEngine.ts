@@ -288,6 +288,7 @@ export class LocalGameEngine {
   }
 
   public castVote(voterId: string, targetPlayerId: string) {
+    if (this.state.phase !== 'VOTING') return;
     const voter = this.state.players[voterId];
     if (!voter || !voter.isAlive || voter.hasVoted) return;
 
@@ -305,21 +306,39 @@ export class LocalGameEngine {
     this.broadcast();
 
     if (votesCount >= aliveCount) {
-      setTimeout(() => this.resolveVoting(), 1500);
+      setTimeout(() => {
+        if (this.state.phase === 'VOTING') {
+          this.resolveVoting();
+        }
+      }, 1500);
     }
   }
 
   public resolveVoting() {
+    if (this.state.phase !== 'VOTING') return;
     const alivePlayers = Object.values(this.state.players).filter(p => p.isAlive);
-    let maxVotes = -1;
-    let victim: Player | null = null;
+    if (alivePlayers.length === 0) return;
 
+    let maxVotes = 0;
     alivePlayers.forEach(p => {
-      if (p.receivedVotesCount > maxVotes) {
-        maxVotes = p.receivedVotesCount;
-        victim = p;
+      if ((p.receivedVotesCount || 0) > maxVotes) {
+        maxVotes = p.receivedVotesCount || 0;
       }
     });
+
+    const topCandidates = alivePlayers.filter(p => (p.receivedVotesCount || 0) === maxVotes && maxVotes > 0);
+    let victim: Player | null = null;
+    let isTie = false;
+
+    if (topCandidates.length === 1) {
+      victim = topCandidates[0];
+    } else if (topCandidates.length > 1) {
+      isTie = true;
+      victim = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+    } else {
+      // If 0 votes cast across the board, pick randomly among alive
+      victim = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+    }
 
     if (victim) {
       (victim as Player).isAlive = false;
@@ -329,7 +348,9 @@ export class LocalGameEngine {
         id: Math.random().toString(),
         senderId: 'system',
         senderName: 'TIZIM',
-        text: `⚖️ Ko'pchilik ovozi bilan ${(victim as Player).displayName} boshpanadan chiqarib yuborildi!`,
+        text: isTie 
+          ? `⚖️ Durang! Tasodifiy tanlov natijasida ${(victim as Player).displayName} boshpanadan chiqarib yuborildi!`
+          : `⚖️ Ko'pchilik ovozi bilan (${maxVotes} ovoz) ${(victim as Player).displayName} boshpanadan chiqarib yuborildi!`,
         timestamp: Date.now(),
         isSystem: true
       });

@@ -60,37 +60,39 @@ export const CATASTROPHES: Catastrophe[] = [
     exclusiveSpecialCardIds: ['spc-pechka-wood']
   },
   {
-    id: 'cat-sandstorm-2055',
-    title: 'Buyuk Qum Bo\'roni (Orol-2055)',
-    shortDesc: 'Tuz va qizil qum bo\'ronlari butun voha va shaharlarni 20 metrli qum ostiga ko\'mib yubordi.',
-    fullStory: 'Ko\'z ochib bo\'lmaydi, nafas olish apparatisiz 5 daqiqada o\'pka tuzga to\'ladi. Boshpana muddati: 30 oy.',
+    id: 'cat-salt-storm-aral',
+    title: 'Orolbo\'yi Zaharli Tuz Bo\'roni',
+    shortDesc: 'Orol tubidagi qadimiy kimyoviy qurollar va tuzlar havoga ko\'tarilib, o\'ta zaharli kislotali bo\'ron hosil qildi.',
+    fullStory: 'Atmosferadagi tuz o\'pkani kuydiradi. Suv filtrlari va germetik bunker kerak.',
     theme: 'uzbek',
-    requiredSkills: ['medical', 'food', 'tech'],
+    requiredSkills: ['medical', 'tech', 'food'],
     shelterMonths: 30,
-    hazards: ['Tuzli chang', 'Suv quritishi', 'Filtrlar tiqilishi'],
-    exclusiveSpecialCardIds: ['spc-sand-gear']
+    hazards: ['Kislotali yomg\'ir', 'Ko\'z va o\'pka kuyishi', 'Suv sho\'rlanishi'],
+    exclusiveSpecialCardIds: ['spc-aral-mask']
   },
   {
-    id: 'cat-wedding-plague',
-    title: 'Buyuk To\'y Epidemiyasi',
-    shortDesc: '5000 kishilik dabdabali to\'ydagi salatdan to\'xtovsiz raqs tushiruvchi xavfli virus tarqaldi.',
-    fullStory: 'Kasallanganlar tinmay karnay chalib boshqalarni ham quchoqlamoqda. Qattiq karantinda 12 oy saqlanish shart.',
+    id: 'cat-water-wars',
+    title: 'Markaziy Osiyo Suv Urushi',
+    shortDesc: 'Muzliklar erib bitdi. Daryolar qurib, ichimlik suvi uchun qurolli to\'qnashuvlar boshlandi.',
+    fullStory: 'Faqat chuqur artezian qudug\'iga ega bo\'lgan boshpanada 36 oy yashash mumkin.',
     theme: 'uzbek',
-    requiredSkills: ['medical', 'psychology', 'defense'],
-    shelterMonths: 12,
-    hazards: ['Karnay sadosi', 'To\'xtovsiz o\'yin-kulgi', 'Uyqusizlik']
+    requiredSkills: ['defense', 'food', 'psychology'],
+    shelterMonths: 36,
+    hazards: ['Tashnalik', 'Suv talonchilari', 'Issiqlik urishi (+55°C)'],
+    exclusiveSpecialCardIds: ['spc-water-well']
   },
 
   // 3. 18+ QORA YUMOR
   {
-    id: 'cat-hormone-overload',
-    title: 'Feromon Gaz Qochishi (18+)',
-    shortDesc: 'Yashirin laboratoriyadan kuchli nazoratsiz feromon gazi butun qit\'aga tarqaldi.',
-    fullStory: 'Tashqarida qolgan barcha tirik mavjudotlar aqldan ozib, hayvoniy instinktlar ketidan quvmoqda. 18 oy aql-hushni saqlash lozim.',
+    id: 'cat-mad-party',
+    title: 'Psixotrop Gaz Tarqalishi (18+)',
+    shortDesc: 'Atmosferaga tarqalgan noma\'lum psixotrop modda barcha insonlarni o\'ta shafqatsiz va ehtirosli manyaklarga aylantirdi.',
+    fullStory: 'Tashqi dunyo telbalik va axloqsizlik botqog\'iga botgan. Faqat sog\'lom aql egalari boshpanada yashirinishi kerak.',
     theme: 'nsfw18',
-    requiredSkills: ['psychology', 'medical', 'defense'],
-    shelterMonths: 18,
-    hazards: ['Kuchli vasvasa', 'Axloqiy qulash', 'Hissiy portlash']
+    requiredSkills: ['psychology', 'defense', 'medical'],
+    shelterMonths: 20,
+    hazards: ['Aqldan ozganlar to\'dasi', 'Psixotrop zaharlanish', 'Uyqusizlik'],
+    exclusiveSpecialCardIds: ['spc-gas-mask']
   }
 ];
 
@@ -98,105 +100,83 @@ export const SHELTER_SPECS_PRESETS: ShelterSpecs[] = [
   {
     areaSqMeters: 180,
     durationMonths: 24,
-    foodSuppliesMonths: 18,
-    waterSuppliesMonths: 24,
-    medicalSupplies: 'Standart shahar aptechkasi va 1 ta kislorod balloni',
-    defenseStatus: 'Mustahkamlangan titan eshik va tashqi videokameralar',
-    specialFeature: 'Kichik gidroponik issiqxona va 2 ta velotrenajyor',
-    internalThreat: 'Havo shamollatish turbinasida vaqti-vaqti bilan begona shovqin eshitiladi'
+    foodSuppliesMonths: 24,
+    waterSuppliesMonths: 30,
+    medicalSupplies: 'To\'liq harbiy operatsiya xonasi va 500 ta dori qutisi',
+    defenseStatus: 'Titan qoplamali germetik eshik, pulemyotli datchiklar',
+    specialFeature: 'Gidroponik issiqxona va 100 kg kartoshka urug\'i',
+    internalThreat: 'Ventilyatsiya filtri har 6 oyda qo\'lda tozalanmasa tutun to\'ladi'
   },
   {
-    areaSqMeters: 320,
+    areaSqMeters: 300,
     durationMonths: 36,
     foodSuppliesMonths: 36,
     waterSuppliesMonths: 40,
-    medicalSupplies: 'To\'liq xirurgiya stoli, antibiotiklar va reanimatsiya apparati',
-    defenseStatus: 'Avtomatik pulemyotli kirish xonasi va lazer datchiklari',
-    specialFeature: 'Mini-kutubxona, 3D printer va 500 litr toza spirt',
-    internalThreat: 'Suv quvurlarining bir qismi zanglagan, ta\'mirga usta zarur'
+    medicalSupplies: 'Katta farmatsevtika ombori, kislorod ballonlari',
+    defenseStatus: 'Yer osti 25 metr chuqurlikda, mustahkam beton gumbaz',
+    specialFeature: 'Toshkent metrosining yopiq maxfiy bunkeri (Dizel generator)',
+    internalThreat: 'Yer osti sizot suvlari bosib ketish xavfi bor'
   },
   {
-    areaSqMeters: 95,
-    durationMonths: 12,
-    foodSuppliesMonths: 14,
-    waterSuppliesMonths: 12,
-    medicalSupplies: 'Yod, bint va ko\'mir tabletkalari',
-    defenseStatus: 'Eski sovet temir lyuki (ichkaridan kashak bilan yopiladi)',
-    specialFeature: 'Dizel generator va 30 quti konserva tushonka',
-    internalThreat: 'Klostrofobiya chaqiruvchi past shift (1.9 metr)'
+    areaSqMeters: 120,
+    durationMonths: 18,
+    foodSuppliesMonths: 18,
+    waterSuppliesMonths: 20,
+    medicalSupplies: 'Boshlang\'ich birinchi yordam to\'plami',
+    defenseStatus: 'Po\'lat eshik va kodli qulf',
+    specialFeature: 'Avtonom chuqur artezian qudug\'i (Toza ichimlik suvi)',
+    internalThreat: 'Zaxira generator yo\'q, sham va akkumulyatordan foydalaniladi'
   }
 ];
 
-// ==================== BUNKER DISCOVERY EVENTS (BOSHPANA HODISALARI) ====================
 export const BUNKER_EVENTS: BunkerEvent[] = [
   {
-    id: 'evt-med-cache',
-    title: '🏥 Yashirin Tibbiyot Ombori Topildi!',
-    description: 'Boshpananing g\'arbiy devori ortida qulflangan tibbiy quti topildi: 50 ta shpris va og\'riqsizlantiruvchi vositalar.',
+    id: 'evt-hidden-medkit',
+    title: 'Yashirin Dori-Darmon Ombori Topildi!',
+    description: 'Bunkerni tozalash chog\'ida devor orqasidan antibakterial preparatlar va vitaminlar qutisi chiqdi.',
     type: 'positive',
-    impactText: 'Boshpananing umumiy tibbiy tayyorgarligi sezilarli oshdi.'
+    impactText: 'Tibbiy holat yaxshilandi! Omon qoluvchilarning kasalliklari yengillashdi.',
+    effect: { addShelterSlot: 0 }
   },
   {
-    id: 'evt-hydroponics-bloom',
-    title: '🌱 Issiqxonada Mo\'l Hosil!',
-    description: 'Gidroponik polkalar kutilganidan 2 barobar ko\'p pomidor va barra ko\'kat berdi.',
+    id: 'evt-extra-room',
+    title: 'Kutilmagan Zaxira Xona Ochildi!',
+    description: 'Qadimiy temir eshik ochildi — ichida 2 kishilik qo\'shimcha krovat va kislorod zaxirasi bor!',
     type: 'positive',
-    impactText: 'Oziq-ovqat zaxirasi +6 oyga ko\'paydi!',
-    effect: { foodChangeMonths: 6 }
-  },
-  {
-    id: 'evt-secret-room',
-    title: '🚪 Zaxira Kichik Xona Ochildi!',
-    description: 'Devor orqasidagi shamollatish yo\'lagi tozalangach, yana 1 kishi bemalol uxlashi mumkin bo\'lgan bo\'sh xona ochildi.',
-    type: 'positive',
-    impactText: 'Boshpanadagi g\'oliblar o\'rni +1 taga oshdi!',
+    impactText: 'Boshpanadagi omon qoluvchilar kvotasi +1 taga oshdi!',
     effect: { addShelterSlot: 1 }
   },
   {
-    id: 'evt-water-leak',
-    title: '💧 Suv Quvuri Yorildi!',
-    description: 'Zanglagan quvurlardan biri bosimga dosh bera olmay yorildi va 100 litr toza ichimlik suvi oqib ketdi.',
+    id: 'evt-rats-food',
+    title: 'Kalamushlar Hujumi (Ozuqa Talafoti)',
+    description: 'Omborga kirgan kemiruvchilar oziq-ovqat qoplarining 30 foizini yaroqsiz holga keltirdi.',
     type: 'negative',
-    impactText: 'Suv zaxirasi -4 oyga qisqardi. Santexnik yoki usta kerak!',
-    effect: { waterChangeMonths: -4 }
+    impactText: 'Oziq-ovqat zaxirasi 4 oyga qisqardi! Qattiq tejamkorlik zarur.',
+    effect: { foodChangeMonths: -4 }
   },
   {
-    id: 'evt-generator-spark',
-    title: '⚡ Generator Nosozligi va Tutun!',
-    description: 'Elektr generatori qizib ketib tutadi. Zudlik bilan muhandis yoki texnik xodim zarur!',
+    id: 'evt-water-leak',
+    title: 'Kanalizatsiya Quvuri Yoriqlari',
+    description: 'Suv tozalash filtriga loy aralashdi. Santexnika va kimyoviy bilim zarur!',
     type: 'negative',
-    impactText: 'Keyingi raundda hamma tezroq gapirishi shart (Taymer 10s ga qisqaradi).',
-    effect: { speedUpTimerSec: 10 }
+    impactText: 'Suv filtri buzildi. Kimyogar yoki Quruvchi kerak!',
+    effect: { waterChangeMonths: -3 }
   },
   {
     id: 'evt-radio-signal',
-    title: '📻 Begona Radio To\'lqin Sadosi!',
-    description: 'Eski radiopriyomnikdan xira ovoz eshitildi: boshqa bir noma\'lum bunker bilan qisqa aloqa o\'rnatildi.',
+    title: 'Sirli Radio Signal Tutildi!',
+    description: 'Boshqa bunkerdan morze alifbosida xabar keldi: "Tog\'larda hayot bor..."',
     type: 'neutral',
-    impactText: 'Dunyo bo\'ylab yana boshqa tirik odamlar borligi ma\'lum bo\'ldi.'
-  },
-  {
-    id: 'evt-rat-infestation',
-    title: '🐀 Omborxonada Kalamushlar!',
-    description: 'Konservalar saqlanadigan xonaga kemiruvchilar kirib olgan. Bir necha quti oziq-ovqat zararlangan.',
-    type: 'negative',
-    impactText: 'Oziq-ovqat zaxirasi biroz kamaydi.',
-    effect: { foodChangeMonths: -2 }
-  },
-  {
-    id: 'evt-old-cash',
-    title: '💰 1995-yilgi Sumlar Qutisi!',
-    description: 'Eski temir sandiqdan 1 milliard sovet sumi va 1995-yilgi qog\'oz pullar topildi. Ammo hozir ular bir tiyinga qimmat.',
-    type: 'neutral',
-    impactText: 'Jamoa shunchaki xotiralarni eslab kulishdi (0 foyda).'
+    impactText: 'Jamoaning umidi va ruhiyati sezilarli darajada ko\'tarildi!',
+    effect: { speedUpTimerSec: 0 }
   }
 ];
 
-// ==================== MASSIVE CARDS POOL (120+ CARDS) ====================
+// ================= 120+ EXPANDED CARDS DATA =================
 export const CARDS_DATA: CardItem[] = [
-  // ---------- KASBLAR (40+ PROFESSIONS) ----------
-  { id: 'prof-surgeon', category: 'profession', title: 'Bosh Xirurg (Jarroh)', description: 'O\'ta murakkab operatsiyalarni o\'tkaza oladi, 15 yillik tajribaga ega.', theme: 'classic', icon: 'Stethoscope', impactScore: { medical: 5, tech: 1 } },
-  { id: 'prof-engineer', category: 'profession', title: 'Muhandis-Energetik', description: 'Har qanday generator, elektr tarmog\'i va turbinalarni ta\'mirlay oladi.', theme: 'classic', icon: 'Wrench', impactScore: { tech: 5, defense: 2 } },
+  // ================= KASB (PROFESSIONS - 25+) =================
+  { id: 'prof-surgeon', category: 'profession', title: 'Bosh Xirurg / Jarroh', description: 'Har qanday og\'ir jarohat, suyak sinishi va kasalliklarni operatsiya qila oladi.', theme: 'classic', icon: 'Stethoscope', impactScore: { medical: 5, psychology: 2 } },
+  { id: 'prof-engineer', category: 'profession', title: 'Bosh Muhandis-Mexanik', description: 'Generatorlar, shamollatish tizimlari va avariya lyuklarini tuzatadi.', theme: 'classic', icon: 'Wrench', impactScore: { tech: 5, defense: 2 } },
   { id: 'prof-agronomist', category: 'profession', title: 'Agronom / Fermer', description: 'Yopiq xonalarda sun\'iy yorug\'likda ekin ekish va hosil olish ustasi.', theme: 'classic', icon: 'Sprout', impactScore: { food: 5, tech: 1 } },
   { id: 'prof-soldier', category: 'profession', title: 'Maxsus Kuchlar Ofitseri', description: 'Harbiy taktika, qurol-yarog\' va himoya postlarini tashkil qilish mutaxassisi.', theme: 'classic', icon: 'Shield', impactScore: { defense: 5, psychology: 1 } },
   { id: 'prof-programmer', category: 'profession', title: 'Kiber-Xavfsizlik Dasturchisi', description: 'Bunker kompyuter tizimlarini boshqaradi, robotlarni qayta dasturlaydi.', theme: 'classic', icon: 'Terminal', impactScore: { tech: 5, defense: 2 } },
@@ -209,8 +189,6 @@ export const CARDS_DATA: CardItem[] = [
   { id: 'prof-cook-general', category: 'profession', title: 'Restoran Bosh Oshpazi', description: 'Har qanday kamyob mahsulotdan to\'yimli va uzoq saqlanuvchi taomlar tayyorlaydi.', theme: 'classic', icon: 'Utensils', impactScore: { food: 5, psychology: 2 } },
   { id: 'prof-firefighter', category: 'profession', title: 'Qutqaruvchi O\'t O\'chiruvchi', description: 'Yong\'in, tutun va vayronalar ostidan odamlarni qutqarish ustasi.', theme: 'classic', icon: 'Flame', impactScore: { defense: 4, medical: 2 } },
   { id: 'prof-pilot', category: 'profession', title: 'Dron va Aviatsiya Uchuvchisi', description: 'Tashqi razvedka dronlarini boshqarib xavfsiz marshrutlarni aniqlaydi.', theme: 'classic', icon: 'Compass', impactScore: { tech: 4, defense: 2 } },
-
-  // O'zbekona Kasblar
   { id: 'prof-taksist', category: 'profession', title: 'Toshkent-Vodiy Taksisti', description: 'Har qanday nosozlikni sim bilan tuzatadi, butun yo\'llarni yoddan biladi.', theme: 'uzbek', icon: 'Car', impactScore: { tech: 3, defense: 2, psychology: 3 } },
   { id: 'prof-choyxona-oshpaz', category: 'profession', title: 'To\'y Oshpazi (Osh Pazi)', description: '500 kishiga 1 ta qozonda ajoyib palov damlaydi, 1 gramm ham isrof qilmaydi.', theme: 'uzbek', icon: 'Utensils', impactScore: { food: 5, psychology: 4 } },
   { id: 'prof-mahalla-raisi', category: 'profession', title: 'Katta Mahalla Raisi', description: 'Har qanday janjalni bir og\'iz gap bilan bosadi, qog\'ozbozlik va tartib qiroli.', theme: 'uzbek', icon: 'Users', impactScore: { psychology: 5, defense: 2 } },
@@ -220,13 +198,10 @@ export const CARDS_DATA: CardItem[] = [
   { id: 'prof-sartarosh', category: 'profession', title: 'Mahalla Sartaroshi', description: 'Gigiyena, jamoa kayfiyati va hamma sirlarni biladigan eng suhbatkash inson.', theme: 'uzbek', icon: 'Scissors', impactScore: { psychology: 3, medical: 1 } },
   { id: 'prof-qassob', category: 'profession', title: 'Go\'shtdor Qassob', description: 'Pichoq ishlatish, go\'shtni tuzlab yillab saqlash va jismoniy baquvvatlik.', theme: 'uzbek', icon: 'Beef', impactScore: { food: 4, defense: 3 } },
   { id: 'prof-buxgalter', category: 'profession', title: 'Tajribali Bosh Buxgalter', description: 'Har bir gramm un, har bir litr suvni oxirgi tomchisigacha hisob-kitob qiladi.', theme: 'uzbek', icon: 'Calculator', impactScore: { food: 3, tech: 2 } },
-
-  // 18+ Kasblar
   { id: 'prof-stripper', category: 'profession', title: 'Professional Striptizchi', description: 'O\'ta egiluvchan tana, chidamlilik va har qanday insonni rom qilish mahorati.', theme: 'nsfw18', icon: 'Smile', impactScore: { psychology: 3, defense: 1 } },
   { id: 'prof-mafia-boss', category: 'profession', title: 'Yashirin Qimorxona Egasi', description: 'Odamlarning zaifliklarini biladi, muzokara va bosim o\'tkazish ustasi.', theme: 'nsfw18', icon: 'Crosshair', impactScore: { psychology: 4, defense: 3 } },
-  { id: 'prof-hacker-darknet', category: 'profession', title: 'Darknet Xakeri', description: 'Tizimlarni buzish, parollarni ochish va yashirin kameralarni o\'rnatish mutaxassisi.', theme: 'nsfw18', icon: 'Key', impactScore: { tech: 5 } },
 
-  // ---------- BIOLOGIYA (20+ BIOLOGY) ----------
+  // ================= BIOLOGIYA (BIOLOGY - 20+) =================
   { id: 'bio-m-25-fertile', category: 'biology', title: 'Erkak, 25 yosh (A\'lo nasl beruvchi)', description: 'Kuch-quvvatga to\'lgan, jismonan mutlaq baquvvat.', theme: 'classic' },
   { id: 'bio-f-23-fertile', category: 'biology', title: 'Ayol, 23 yosh (Farzand ko\'rishga tayyor)', description: 'Genetik jihatdan sog\'lom va yosh.', theme: 'classic' },
   { id: 'bio-m-42-infertile', category: 'biology', title: 'Erkak, 42 yosh (Bepusht)', description: 'Katta hayotiy tajribaga ega, ammo nasl qoldirolmaydi.', theme: 'classic' },
@@ -237,8 +212,18 @@ export const CARDS_DATA: CardItem[] = [
   { id: 'bio-f-27-mom', category: 'biology', title: 'Ayol, 27 yosh (3 ta bola onasi)', description: 'Katta oila boshqargan, sabrli va mehribon.', theme: 'uzbek' },
   { id: 'bio-m-21-blood', category: 'biology', title: 'Erkak, 21 yosh (1-Salbiy universal qon donori)', description: 'Har qanday jarohatlangan insonga universal qon bera oladi.', theme: 'classic' },
   { id: 'bio-f-32-doctorate', category: 'biology', title: 'Ayol, 32 yosh (2 ta fan doktori)', description: 'Yuqori intellekt va aql egasi.', theme: 'classic' },
+  { id: 'bio-m-18-teen', category: 'biology', title: 'Erkak, 18 yosh (Tez o\'rganuvchi)', description: 'Har qanday yangi hunarni 2 kunda o\'zlashtiradi.', theme: 'classic' },
+  { id: 'bio-f-45-leader', category: 'biology', title: 'Ayol, 45 yosh (Tashkilotchi rahbar)', description: 'Krizis vaqtida jamoani tartibga solish qobiliyati.', theme: 'classic' },
+  { id: 'bio-m-50-veteran', category: 'biology', title: 'Erkak, 50 yosh (Urush faxriysi)', description: 'Ko\'p sinovlarni ko\'rgan, ruhiyati mustahkam.', theme: 'classic' },
+  { id: 'bio-f-29-gardener', category: 'biology', title: 'Ayol, 29 yosh (O\'simliklar ustasi)', description: 'Har qanday quruq tuproqda ko\'kat yetishtiradi.', theme: 'uzbek' },
+  { id: 'bio-m-35-builder', category: 'biology', title: 'Erkak, 35 yosh (195 sm bo\'y, baquvvat)', description: 'Og\'ir tosh va metallarni bemalol ko\'taradi.', theme: 'uzbek' },
+  { id: 'bio-f-21-student', category: 'biology', title: 'Ayol, 21 yosh (Tibbiyot talabasi)', description: 'Tezkor reaksiyaga ega, kechalari uxlamay ishlay oladi.', theme: 'classic' },
+  { id: 'bio-m-28-diver', category: 'biology', title: 'Erkak, 28 yosh (G\'avvos / Suvchi)', description: 'Suv ostida 4 daqiqa nafasini ushlay oladi.', theme: 'classic' },
+  { id: 'bio-f-55-bobo', category: 'biology', title: 'Ayol, 55 yosh (Tajribali buvijon)', description: 'Oziq-ovqatlarni yillab chirimasdan saqlash sirlarini biladi.', theme: 'uzbek' },
+  { id: 'bio-m-33-driver', category: 'biology', title: 'Erkak, 33 yosh (Reaksiyasi soniyalik)', description: 'Xavfni 1 soniya oldin sezish qobiliyati.', theme: 'classic' },
+  { id: 'bio-f-26-polyglot', category: 'biology', title: 'Ayol, 26 yosh (6 ta til biladi)', description: 'Boshqa chet el bunkerlari bilan aloqa o\'rnatadi.', theme: 'classic' },
 
-  // ---------- SALOMATLIK (20+ HEALTH) ----------
+  // ================= SALOMATLIK (HEALTH - 20+) =================
   { id: 'hlth-perfect', category: 'health', title: 'Mutlaqo Sog\'lom (Temir Immunitet)', description: 'Birorta surunkali kasalligi yo\'q, shamollamaydi.', theme: 'classic', impactScore: { medical: 2 } },
   { id: 'hlth-diabetes', category: 'health', title: '1-Tip Qandli Diabet (Insulin zarur)', description: 'Har oy muntazam insulin qabul qilishi shart.', theme: 'classic', impactScore: { medical: -3 } },
   { id: 'hlth-blind-one', category: 'health', title: 'Bir Ko\'zi Ko\'r (50% ko\'rish)', description: 'Mo\'ljalga olishda biroz qiynaladi, lekin yashashga xalal bermaydi.', theme: 'classic' },
@@ -249,8 +234,18 @@ export const CARDS_DATA: CardItem[] = [
   { id: 'hlth-colorblind', category: 'health', title: 'Daltonik (Ranglarni ajratolmaydi)', description: 'Qizil va yashil simlarni adashtirishi mumkin.', theme: 'classic', impactScore: { tech: -1 } },
   { id: 'hlth-super-hearing', category: 'health', title: 'O\'tkir Eshitish Qobiliyati', description: 'Devor ortidagi har qanday qadam tovushini 100 metrdan sezadi.', theme: 'classic', impactScore: { defense: 3 } },
   { id: 'hlth-std-secret', category: 'health', title: 'Yashirin Yuqumli Zaxm (18+)', description: 'Faqat yaqin aloqada yuqadi, jiddiy davolanish talab qiladi.', theme: 'nsfw18', impactScore: { medical: -3 } },
+  { id: 'hlth-allergy-dust', category: 'health', title: 'Chang va Zamburug\' Allergiyasi', description: 'Ventilyatsiya toza bo\'lmasa, to\'xtovsiz aksiradi.', theme: 'classic', impactScore: { medical: -1 } },
+  { id: 'hlth-high-blood', category: 'health', title: 'Gipertoniya (Qon bosimi baland)', description: 'Og\'ir jismoniy yukda bosh aylanishi mumkin.', theme: 'classic', impactScore: { medical: -1 } },
+  { id: 'hlth-night-vision', category: 'health', title: 'Qorong\'uda A\'lo Ko\'rish', description: 'Chiroq o\'chganda ham bemalol harakatlanadi.', theme: 'classic', impactScore: { tech: 2, defense: 2 } },
+  { id: 'hlth-prosthetic-leg', category: 'health', title: 'Mexanik Oyoq Protezi', description: 'Chidamli kiber-oyoq, hech qachon og\'rimaydi.', theme: 'classic', impactScore: { tech: 1 } },
+  { id: 'hlth-migraine', category: 'health', title: 'Surunkali Migren', description: 'Qattiq shovqinda 1 kun ish qobiliyatini yo\'qotadi.', theme: 'classic', impactScore: { psychology: -2 } },
+  { id: 'hlth-strong-bones', category: 'health', title: 'Qalin va Mustahkam Suyaklar', description: 'Yiqilganda ham suyaklari sinmaydigan mustahkam skelet.', theme: 'classic', impactScore: { defense: 2 } },
+  { id: 'hlth-cardio-beast', category: 'health', title: 'Marafonchi Yurak (Puls 45)', description: 'Charchoq bilmay 12 soat tinimsiz ishlay oladi.', theme: 'classic', impactScore: { defense: 3 } },
+  { id: 'hlth-flatfoot', category: 'health', title: 'Yassioyoqlik (Ploskostopiya)', description: 'Uzoq yugura olmaydi, lekin o\'tirib ishlashga usta.', theme: 'classic' },
+  { id: 'hlth-dentist-fear', category: 'health', title: 'Tish Og\'rig\'i', description: 'Bunkerda stomatolog bo\'lmasa azoblanadi.', theme: 'classic', impactScore: { medical: -1 } },
+  { id: 'hlth-hypochondriac', category: 'health', title: 'Ipoxondrik (O\'zini kasal deb o\'ylovchi)', description: 'Doim vahima qiladi, lekin aslida sog\'lom.', theme: 'classic', impactScore: { psychology: -2 } },
 
-  // ---------- BAGAJ / BUYUMLAR (25+ BAGGAGE) ----------
+  // ================= BAGAJ (BAGGAGE - 20+) =================
   { id: 'bag-shotgun', category: 'baggage', title: 'Ov Miltig\'i va 50 ta Patron', description: 'Bunkerni tashqi tajovuzkorlardan himoya qilish vositasi.', theme: 'classic', icon: 'ShieldAlert', impactScore: { defense: 5 } },
   { id: 'bag-medkit', category: 'baggage', title: 'Harbiy Katta Aptechka', description: 'Skalpel, antibiotiklar, og\'riqsizlantiruvchi va tikish iplari.', theme: 'classic', icon: 'BriefcaseMedical', impactScore: { medical: 5 } },
   { id: 'bag-seeds', category: 'baggage', title: 'Gidroponik Urug\'lar To\'plami (10 kg)', description: 'Bug\'doy, pomidor, loviya va soya urug\'lari.', theme: 'classic', icon: 'Leaf', impactScore: { food: 5 } },
@@ -265,23 +260,58 @@ export const CARDS_DATA: CardItem[] = [
   { id: 'bag-samarkand-bread', category: 'baggage', title: '20 dona Samarqand Qotgan Noni', description: 'Suv sepsangiz darhol yumshaydi, 3 yil buzilmaydi.', theme: 'uzbek', icon: 'Cookie', impactScore: { food: 4 } },
   { id: 'bag-drone-survey', category: 'baggage', title: 'Termal Kamerali Mini-Dron', description: 'Bunker atrofidagi vaziyatni xavfsiz kuzatish apparati.', theme: 'classic', icon: 'Camera', impactScore: { defense: 4, tech: 2 } },
   { id: 'bag-whiskey', category: 'baggage', title: '12 shisha 18 yillik Viski (18+)', description: 'Kuchli antiseptik, og\'riq qoldiruvchi yoki jamoani mast qilish vositasi.', theme: 'nsfw18', icon: 'Wine', impactScore: { medical: 2, psychology: 3 } },
+  { id: 'bag-solar-panel', category: 'baggage', title: 'Katlanuvchi Quyosh Paneli (500W)', description: 'Har qanday batareya va chiroqlarni avtonom zaryadlaydi.', theme: 'classic', icon: 'Sun', impactScore: { tech: 4 } },
+  { id: 'bag-gas-masks', category: 'baggage', title: '5 dona Harbiy Protivogaz (Filtrlar bilan)', description: 'Zaharli gaz va tutundan 100% himoya.', theme: 'classic', icon: 'Shield', impactScore: { medical: 3, defense: 3 } },
+  { id: 'bag-geiger-counter', category: 'baggage', title: 'Raqamli Dozimetr (Geyger Sanoqchisi)', description: 'Suv va ozuqadagi radiatsiyani darhol aniqlaydi.', theme: 'classic', icon: 'Activity', impactScore: { medical: 3, tech: 2 } },
+  { id: 'bag-canned-meat', category: 'baggage', title: '100 banka Mol Go\'shti Tushonkasi', description: '5 yil saqlanadigan oqsilga boy zaxira.', theme: 'classic', icon: 'Package', impactScore: { food: 5 } },
+  { id: 'bag-flamethrower', category: 'baggage', title: 'Qo\'lbola Olovpurkagich (Ognetomet)', description: 'Zombi yoki yirtqich hayvonlarni 1 soniyada yoqib yuboradi.', theme: 'classic', icon: 'Flame', impactScore: { defense: 5 } },
+  { id: 'bag-ham-radio', category: 'baggage', title: 'Kuchli Qisqa To\'lqinli Radiostansiya', description: '5000 km masofadagi boshqa bunkerlar bilan bog\'lanish.', theme: 'classic', icon: 'Radio', impactScore: { tech: 4, psychology: 2 } },
 
-  // ---------- XOBBI & KO'NIKMALAR (15+ HOBBIES) ----------
+  // ================= XOBBI (HOBBIES - 20+) =================
   { id: 'hob-karate', category: 'hobby', title: 'Qo\'l Jangi / Karate (Qora belbog\')', description: 'Qurolsiz ham o\'zini va boshqalarni dushmandan himoya qiladi.', theme: 'classic', impactScore: { defense: 4 } },
   { id: 'hob-guitar', category: 'hobby', title: 'Gitara va Jonli Qo\'shiq Kuylash', description: 'Bunker ahlini tushkunlikdan olib chiqadi, ruhiyatni ko\'taradi.', theme: 'classic', impactScore: { psychology: 5 } },
   { id: 'hob-radio-ham', category: 'hobby', title: 'Radio-Havaskor (Morze alifbosi)', description: 'Eski qismlardan boshqa omon qolganlar bilan aloqa stansiyasi yasaydi.', theme: 'classic', impactScore: { tech: 4 } },
   { id: 'hob-herbalist', category: 'hobby', title: 'Xalq Tabobati va Giyafrushlik', description: 'Har qanday o\'t-o\'landan dorivor damlama va malham tayyorlaydi.', theme: 'uzbek', impactScore: { medical: 4 } },
   { id: 'hob-chess', category: 'hobby', title: 'Shaxmat Grossmeysteri', description: 'Strategik rejalashtirish va resurslarni 10 qadam oldindan hisoblash ustasi.', theme: 'classic', impactScore: { psychology: 3, tech: 2 } },
   { id: 'hob-lockpicking', category: 'hobby', title: 'Qulflarni Ochish (Spitsialist)', description: 'Qulflanib qolgan har qanday zanglagan eshikni 30 soniyada ochadi.', theme: 'classic', impactScore: { tech: 3, defense: 2 } },
+  { id: 'hob-origami', category: 'hobby', title: 'Qog\'oz Buklash va Origami San\'ati', description: 'Bolalarga ta\'lim beradi, tinchlantiruvchi meditatsiya.', theme: 'classic', impactScore: { psychology: 2 } },
+  { id: 'hob-brewing', category: 'hobby', title: 'Xonaki Ichimliklar Tayyorlash', description: 'Meva po\'stlog\'idan toza spirt va antiseptik haydash ustasi.', theme: 'classic', impactScore: { medical: 3, food: 2 } },
+  { id: 'hob-electronics', category: 'hobby', title: 'Robototexnika va Mikrosxemalar', description: 'Buzilgan simlarni ulab, chiroq va batareya yasaydi.', theme: 'classic', impactScore: { tech: 4 } },
+  { id: 'hob-sewing', category: 'hobby', title: 'Tikuvchilik va Kiyim Yamash', description: 'Bunker aholisiga yirtilgan kiyimlarni tikib, issiq kiyim yasaydi.', theme: 'uzbek', impactScore: { tech: 2, food: 1 } },
+  { id: 'hob-astronomy', category: 'hobby', title: 'Astronomiya va Yulduzlar', description: 'Tashqariga chiqqanda yulduzlar orqali yo\'lni xatosiz topadi.', theme: 'classic', impactScore: { tech: 2 } },
+  { id: 'hob-hunting', category: 'hobby', title: 'Qopqon Qo\'yish va Ovchilik', description: 'Har qanday kichik jonzotlarni tuzoqqa tushirish sirlari.', theme: 'classic', impactScore: { food: 4, defense: 2 } },
+  { id: 'hob-carpentry', category: 'hobby', title: 'Duradgorlik (Yog\'ochsozlik)', description: 'Krovat, stol va mustahkam yog\'och to\'siqlar yasaydi.', theme: 'uzbek', impactScore: { tech: 3, defense: 2 } },
+  { id: 'hob-poker', category: 'hobby', title: 'Professional Qimor va Bluff', description: 'Odamlarning yuz ifodasidan yolg\'onini 100% sezadi.', theme: 'nsfw18', impactScore: { psychology: 4 } },
+  { id: 'hob-massage', category: 'hobby', title: 'Terapevtik Massaj Ustasi', description: 'Mushaklar og\'rig\'i va stressni 10 daqiqada yengadi.', theme: 'classic', impactScore: { medical: 3, psychology: 3 } },
+  { id: 'hob-baking', category: 'hobby', title: 'Tandirda Non va Somsa Yopish', description: 'Har qanday xamirni pechkada lazzatli qilib pishiradi.', theme: 'uzbek', impactScore: { food: 4, psychology: 3 } },
+  { id: 'hob-archery', category: 'hobby', title: 'Kamondan O\'q Otish (Kamondoz)', description: 'Tovushsiz ov qilish va 50 metrdan nishonga urish.', theme: 'classic', impactScore: { defense: 4, food: 2 } },
+  { id: 'hob-leather', category: 'hobby', title: 'Ko\'nchilik (Teri Oshlash)', description: 'Chidamli botinka va himoya kamarlari yasaydi.', theme: 'classic', impactScore: { tech: 2 } },
+  { id: 'hob-calligraphy', category: 'hobby', title: 'Xattotlik va Kitob Ko\'chirish', description: 'Bilimlarni kelajak avlod uchun qog\'ozga muhrlaydi.', theme: 'uzbek', impactScore: { psychology: 3 } },
+  { id: 'hob-paragliding', category: 'hobby', title: 'Ekstremal Sayyohlik', description: 'G\'orlar, baland qoyalar va sovuqda chidamlilik.', theme: 'classic', impactScore: { defense: 3 } },
 
-  // ---------- FAKTLAR (15+ FACTS) ----------
+  // ================= FAKTLAR (FACTS - 20+) =================
   { id: 'fac-architect', category: 'fact', title: 'Boshpana Chizmasi Muallifi', description: 'Bu boshpananing barcha yashirin xonalari va zaxira lyuklarini biladi.', theme: 'classic', impactScore: { tech: 3, defense: 3 } },
   { id: 'fac-prison', category: 'fact', title: 'O\'tmishda Qamoqdan Qochgan', description: 'Har qanday qulfni ochadi, ammo o\'g\'irlikka moyilligi bor.', theme: 'classic', impactScore: { defense: 2, psychology: -2 } },
   { id: 'fac-poison-immune', category: 'fact', title: 'Zaharlarga Chidamli (Immunitet)', description: 'Ilgari zaharli moddalar bilan ishlagan, tanasi zahar qabul qilmaydi.', theme: 'classic', impactScore: { medical: 3 } },
   { id: 'fac-password', category: 'fact', title: 'Boshpana Boshqaruv Parolini Biladi', description: 'U bo\'lmasa, markaziy ombor qulflanib qolishi mumkin.', theme: 'uzbek', impactScore: { food: 3 } },
   { id: 'fac-agent', category: 'fact', title: 'Yashirin Maxfiy Agent', description: 'Yolg\'onni 1 soniyada sezadi, kim dushman ekanini darhol aniqlaydi.', theme: 'classic', impactScore: { defense: 4 } },
+  { id: 'fac-billionaire-heir', category: 'fact', title: 'Bunkerni Moliyalashtirgan Homiysi', description: 'Barcha jihozlarning qayerda turishini yoddan biladi.', theme: 'classic', impactScore: { tech: 2, food: 2 } },
+  { id: 'fac-cult-leader', category: 'fact', title: 'Qadimiy Sirli Jamiyat A\'zosi', description: 'Odamlarni ishontirish va o\'z ortidan ergashtirish kuchi.', theme: 'classic', impactScore: { psychology: 4 } },
+  { id: 'fac-stolen-code', category: 'fact', title: 'Dizel Generatori Maxfiy Kodini Biladi', description: 'Generator to\'xtab qolsa, faqat u qayta ishga tushiradi.', theme: 'classic', impactScore: { tech: 4 } },
+  { id: 'fac-arsonist', category: 'fact', title: 'Olov bilan O\'ynashni Yoqtiradi', description: 'Har qanday nam o\'tinni yoqa oladi, lekin ehtiyotkorlik zarur.', theme: 'classic', impactScore: { tech: 2, defense: -1 } },
+  { id: 'fac-photographic-mem', category: 'fact', title: 'Fotografik Xotira Egasi', description: 'O\'qigan 1000 ta kitobini verguligacha eslab qolgan.', theme: 'classic', impactScore: { tech: 4, medical: 3 } },
+  { id: 'fac-secret-tunnel', category: 'fact', title: 'Tashqariga Chiqadigan Maxfiy Teshikni Biladi', description: 'Xavf tug\'ilganda jamoani xavfsiz evakuatsiya qila oladi.', theme: 'uzbek', impactScore: { defense: 4 } },
+  { id: 'fac-food-smuggler', category: 'fact', title: 'Bunkerdan Tashqarida Yashirin Ombori Bor', description: 'Tashqarida 50 kg konserva ko\'mib qo\'yilgan.', theme: 'uzbek', impactScore: { food: 4 } },
+  { id: 'fac-fake-identity', category: 'fact', title: 'Soxta Hujjat bilan Kirgan', description: 'Aslida boshqa odam, lekin barcha qobiliyatlari haqiqiy.', theme: 'nsfw18', impactScore: { psychology: -1, defense: 2 } },
+  { id: 'fac-bunker-builder', category: 'fact', title: 'Bunker Betonini Qorishda Qatnashgan', description: 'Devorlarning eng mustahkam va zaif nuqtalarini biladi.', theme: 'uzbek', impactScore: { tech: 3, defense: 2 } },
+  { id: 'fac-hermit', category: 'fact', title: '5 Yil Tog\'da Yolg\'iz Yashagan', description: 'Odamlarsiz va sukunatda yashashga 100% moslashgan.', theme: 'classic', impactScore: { psychology: 4 } },
+  { id: 'fac-black-belt-secret', category: 'fact', title: 'O\'tmishda Maxsus Xizmatda Xizmat Qilgan', description: 'Tashqi hujumda butun boshpanani yolg\'iz himoya qiladi.', theme: 'classic', impactScore: { defense: 5 } },
+  { id: 'fac-chef-secret', category: 'fact', title: '5 Yulduzli Mehmonxona Oshpazi Shogirdi', description: 'Oddiy suv va nondan ajoyib taom qiladi.', theme: 'uzbek', impactScore: { food: 3, psychology: 3 } },
+  { id: 'fac-codebreaker', category: 'fact', title: 'Kriptograf / Kod Buzuvchi', description: 'Begona radio signallarni va parollarni 1 daqiqada ochadi.', theme: 'classic', impactScore: { tech: 4 } },
+  { id: 'fac-healer-family', category: 'fact', title: '7 Avloddan Beri Tabiblar Oilasi', description: 'Kamyob dorilar formulasini yoddan biladi.', theme: 'uzbek', impactScore: { medical: 4 } },
+  { id: 'fac-radioactive-survivor', category: 'fact', title: 'Ilgari Radiatsiya Avariyasidan Omon Chiqqan', description: 'Qonida kuchli antitanachalar bor.', theme: 'classic', impactScore: { medical: 3 } },
 
-  // ---------- MAXSUS HARAKAT KARTALARI (SPECIAL CARDS) ----------
+  // ================= MAXSUS KARTALAR (SPECIAL - 20+) =================
   {
     id: 'spc-cancel-vote',
     category: 'special',
@@ -336,8 +366,24 @@ export const CARDS_DATA: CardItem[] = [
     icon: 'Vote',
     specialAction: { type: 'extra_vote' }
   },
-
-  // Falokatlarga bog'liq maxsus kartalar:
+  {
+    id: 'spc-heal-condition',
+    category: 'special',
+    title: 'Mo\'jizaviy Shifo (Dori Inyeksiyasi)',
+    description: 'O\'zingizdagi yoki do\'stingizdagi har qanday salbiy kasallik kartasini butunlay yo\'qotasiz.',
+    theme: 'classic',
+    icon: 'HeartPulse',
+    specialAction: { type: 'heal_condition' }
+  },
+  {
+    id: 'spc-immunity',
+    category: 'special',
+    title: 'To\'liq Immunitet (1 Raund Omon Qolish)',
+    description: 'Ushbu raundda sizni hech kim ovoz berish orqali chiqara olmaydi.',
+    theme: 'classic',
+    icon: 'Shield',
+    specialAction: { type: 'immunity' }
+  },
   {
     id: 'spc-rad-suit',
     category: 'special',
@@ -352,7 +398,7 @@ export const CARDS_DATA: CardItem[] = [
     id: 'spc-antidote',
     category: 'special',
     title: 'Tajriba Vaksina Ampulasi',
-    description: 'Faqat Zombi Epidemiyasida: o\'zingizdagi yoki do\'stingizdagi har qanday kasallikni davolaydi.',
+    description: 'Faqat Zombi Epidemiyasida: virusga qarshi mutlaq dori.',
     theme: 'classic',
     disasterSpecificId: 'cat-zombie-virus',
     icon: 'HeartPulse',
@@ -367,5 +413,55 @@ export const CARDS_DATA: CardItem[] = [
     disasterSpecificId: 'cat-eternal-blackout',
     icon: 'Flame',
     impactScore: { tech: 3, defense: 2 }
+  },
+  {
+    id: 'spc-aral-mask',
+    category: 'special',
+    title: 'Orol Kimyoviy Respiratori',
+    description: 'Faqat Tuz Bo\'roni falokatida: o\'pkani tuz va kislotadan 100% saqlaydi.',
+    theme: 'uzbek',
+    disasterSpecificId: 'cat-salt-storm-aral',
+    icon: 'Shield',
+    specialAction: { type: 'immunity' }
+  },
+  {
+    id: 'spc-water-well',
+    category: 'special',
+    title: 'Chuqur Quduq Burg\'ulash Qurilmasi',
+    description: 'Faqat Suv Urushida: boshpanani cheksiz ichimlik suvi bilan ta\'minlaydi.',
+    theme: 'uzbek',
+    disasterSpecificId: 'cat-water-wars',
+    icon: 'Droplets',
+    impactScore: { food: 5, tech: 3 }
+  },
+  {
+    id: 'spc-gas-mask',
+    category: 'special',
+    title: 'Armiya Germetik Gaz Niqobi',
+    description: 'Faqat Psixotrop Gaz falokatida: aqldan ozishdan to\'liq asraydi.',
+    theme: 'nsfw18',
+    disasterSpecificId: 'cat-mad-party',
+    icon: 'Shield',
+    specialAction: { type: 'immunity' }
+  },
+  {
+    id: 'spc-air-filter-spare',
+    category: 'special',
+    title: 'Zaxira Titan Havo Filtri',
+    description: 'Faqat Asteroid Zarbasi falokatida: chang va tutunni 100% tozalaydi.',
+    theme: 'classic',
+    disasterSpecificId: 'cat-asteroid-impact',
+    icon: 'Wrench',
+    impactScore: { tech: 4, medical: 3 }
+  },
+  {
+    id: 'spc-emp-jammer',
+    category: 'special',
+    title: 'Kiber-EMP To\'lqin Generator',
+    description: 'Faqat SI Qo\'zg\'oloni falokatida: bunker atrofidagi barcha dushman dronlarni kuydiradi.',
+    theme: 'classic',
+    disasterSpecificId: 'cat-ai-uprising',
+    icon: 'Zap',
+    impactScore: { defense: 5, tech: 4 }
   }
 ];
