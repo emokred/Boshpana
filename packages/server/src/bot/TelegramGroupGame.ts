@@ -93,10 +93,9 @@ export class TelegramGroupGameManager {
   private async renderLobbyMessage(ctx: Context, game: GroupGameState, messageIdToEdit?: number) {
     const keyboard = new InlineKeyboard()
       .text('➕ O\'yinga Qo\'shilish (Join)', 'group_join')
-      .text('➖ Chiqish', 'group_leave')
       .row()
       .text('🚀 O\'yinni Boshlash (Start)', 'group_start')
-      .text('⚙️ Qoidalar', 'group_rules');
+      .text('📜 Qoidalar', 'group_rules');
 
     const playerList = Array.from(game.players.values())
       .map((p, idx) => `${idx + 1}. 👤 ${p.name} ${p.username ? `(@${p.username})` : ''} ${p.id === game.hostId ? '👑 [Host]' : ''}`)
@@ -148,10 +147,32 @@ export class TelegramGroupGameManager {
     const userId = ctx.from!.id;
     const userName = ctx.from!.first_name || 'O\'yinchi';
 
-    // JOIN
+    // JOIN / LEAVE TOGGLE
     if (data === 'group_join') {
       if (game.phase !== 'LOBBY') return;
-      if (game.players.has(userId)) return;
+
+      // If user already in game, clicking toggles leave gracefully for them
+      if (game.players.has(userId)) {
+        if (userId === game.hostId && game.players.size > 1) {
+          game.players.delete(userId);
+          game.playerOrder = game.playerOrder.filter(id => id !== userId);
+          game.hostId = game.playerOrder[0];
+          game.hostName = game.players.get(game.hostId)?.name || 'Host';
+        } else {
+          game.players.delete(userId);
+          game.playerOrder = game.playerOrder.filter(id => id !== userId);
+        }
+        this.userActiveGames.delete(userId);
+
+        if (game.players.size === 0) {
+          this.games.delete(chatId);
+          return;
+        }
+
+        await this.renderLobbyMessage(ctx, game, ctx.callbackQuery?.message?.message_id);
+        return;
+      }
+
       if (game.players.size >= 16) return;
 
       game.players.set(userId, {
