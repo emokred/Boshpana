@@ -71,33 +71,60 @@ async function bootstrap() {
 
       // Set bot command list
       bot.api.setMyCommands([
-        { command: 'start', description: '🎮 O\'yinni Boshlash (Mini App)' },
+        { command: 'start', description: '🎮 Asosiy Menyu (Interaktiv)' },
+        { command: 'cards', description: '🎴 Mening Kartalarim (Lichka)' },
         { command: 'boshpana', description: '🚪 Guruhda o\'yin xonasi ochish' },
         { command: 'stopgame', description: '🛑 Guruh o\'yinini to\'xtatish' },
         { command: 'qoidalar', description: '📜 O\'yin qoidalari va yo\'riqnoma' },
         { command: 'help', description: 'ℹ️ Yordam va ma\'lumot' }
       ]).catch(() => {});
 
-      // /start handler
+      // /start handler with rich interactive menu
       bot.command('start', async (ctx) => {
         const startParam = ctx.match; // e.g. /start room_BOSH-123
         const targetUrl = WEBAPP_URL.startsWith('http') ? WEBAPP_URL : `https://${WEBAPP_URL}`;
         const gameUrl = startParam ? `${targetUrl}?room=${startParam.replace('room_', '')}` : targetUrl;
 
         const keyboard = new InlineKeyboard()
-          .webApp('🕹 Boshpanani Boshlash (O\'yin)', gameUrl)
+          .webApp('🕹 Boshpanani Boshlash (Mini App)', gameUrl)
           .row()
-          .url('👥 Guruhga Qo\'shish (Guruh Rejimi)', `https://t.me/${ctx.me.username}?startgroup=true`);
+          .url('👥 Guruhga Qo\'shish (Guruh Rejimi)', `https://t.me/${ctx.me.username}?startgroup=true`)
+          .row()
+          .text('🎴 Mening Maxfiy Kartalarim', 'dm_my_cards')
+          .text('📜 Qoidalar', 'group_rules')
+          .row()
+          .webApp('🖨️ Kartalarni Chop Etish (PDF)', targetUrl);
 
         await ctx.reply(
           `🚨 <b>BOSHPANA | O'zbekcha Bunker O'yiniga Xush Kelibsiz!</b>\n\n` +
           `Dunyo bo'ylab global apokalipsis yuz berdi. Faqat cheklangan o'ringa ega yer osti boshpanasiga kirganlargina omon qoladi!\n\n` +
-          `🎭 <b>O'yin rejimlari:</b>\n` +
-          `1. 📱 <b>Bitta Telefon (Qo'lma-qo'l):</b> Do'stlar davrasida 1 ta telefon orqali o'ynash.\n` +
+          `🎭 <b>4 Xil O'yin Rejimi:</b>\n` +
+          `1. 📱 <b>Bitta Telefon (Qo'lma-qo'l):</b> Do'stlar bilan 1 ta telefon orqali o'ynash.\n` +
           `2. 👥 <b>Telegram Guruh Rejimi:</b> Botni guruhga qo'shib /boshpana deb yozing.\n` +
           `3. 🌐 <b>To'liq Online (TMA):</b> Telegram Mini App ichida real vaqtda o'ynash.\n` +
-          `4. 🎲 <b>Jonli Davra:</b> Kartalar telefonda, gapirish jonli hayotda.\n\n` +
-          `👇 <b>O'ynash uchun pastdagi tugmani bosing:</b>`,
+          `4. 🎲 <b>Jonli Davra (Gibrid):</b> Kartalar telefonda, tortishuv davrada!\n\n` +
+          `👇 <b>O'ynash uchun kerakli menyuni tanlang:</b>`,
+          { parse_mode: 'HTML', reply_markup: keyboard }
+        );
+      });
+
+      // /cards command in DM
+      bot.command('cards', async (ctx) => {
+        const keyboard = new InlineKeyboard()
+          .text('🩺 Kasb', 'dm_card_profession')
+          .text('🧬 Biologiya', 'dm_card_biology')
+          .row()
+          .text('💚 Salomatlik', 'dm_card_health')
+          .text('🎒 Bagaj', 'dm_card_baggage')
+          .row()
+          .text('✨ Xobbi', 'dm_card_hobby')
+          .text('📜 Fakt', 'dm_card_fact')
+          .row()
+          .text('⚡ Maxsus Qobiliyat', 'dm_card_special');
+
+        await ctx.reply(
+          `🎴 <b>Sizning Boshpana Kartalaringiz (Interaktiv Lichka):</b>\n\n` +
+          `Kartangiz xususiyatini ko'rish uchun quyidagi tugmalardan birini bosing:`,
           { parse_mode: 'HTML', reply_markup: keyboard }
         );
       });
@@ -140,13 +167,30 @@ async function bootstrap() {
         );
       });
 
-      // Callback queries for group game
-      bot.callbackQuery(['group_join', 'group_leave', 'group_start', 'group_rules'], async (ctx) => {
-        await groupGameManager.handleCallbackQuery(ctx);
-      });
+      // Universal callback queries router (Fixes any freeze / infinite loading spinner)
+      bot.on('callback_query:data', async (ctx) => {
+        if (ctx.callbackQuery.data === 'dm_my_cards') {
+          await ctx.answerCallbackQuery().catch(() => {});
+          const keyboard = new InlineKeyboard()
+            .text('🩺 Kasb', 'dm_card_profession')
+            .text('🧬 Biologiya', 'dm_card_biology')
+            .row()
+            .text('💚 Salomatlik', 'dm_card_health')
+            .text('🎒 Bagaj', 'dm_card_baggage')
+            .row()
+            .text('✨ Xobbi', 'dm_card_hobby')
+            .text('📜 Fakt', 'dm_card_fact')
+            .row()
+            .text('⚡ Maxsus Qobiliyat', 'dm_card_special');
 
-      bot.callbackQuery('group_reveal_prof', async (ctx) => {
-        await groupGameManager.handleRevealProfession(ctx);
+          await ctx.reply(`🎴 <b>Mening Kartalarim (Interaktiv):</b>\nBatafsil ko'rish uchun tanlang:`, {
+            parse_mode: 'HTML',
+            reply_markup: keyboard
+          });
+          return;
+        }
+
+        await groupGameManager.handleCallbackQuery(ctx);
       });
 
       bot.start({

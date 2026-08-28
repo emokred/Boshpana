@@ -33,6 +33,7 @@ export interface GroupGameState {
 export class TelegramGroupGameManager {
   private bot: Bot;
   private games: Map<number, GroupGameState> = new Map(); // chatId -> Game
+  private userActiveGames: Map<number, number> = new Map(); // userId -> chatId
 
   constructor(bot: Bot) {
     this.bot = bot;
@@ -83,6 +84,7 @@ export class TelegramGroupGameManager {
       receivedVotesCount: 0
     });
     newGame.playerOrder.push(hostId);
+    this.userActiveGames.set(hostId, chatId);
 
     this.games.set(chatId, newGame);
     await this.renderLobbyMessage(ctx, newGame);
@@ -122,31 +124,35 @@ export class TelegramGroupGameManager {
     }
   }
 
-  // ================= 2. HANDLE INLINE ACTIONS (JOIN / LEAVE / START) =================
+  // ================= 2. UNIVERSAL CALLBACK QUERY HANDLER =================
   public async handleCallbackQuery(ctx: Context) {
     const data = ctx.callbackQuery?.data;
-    if (!data || !ctx.chat) return;
+    if (!data) return;
 
-    const game = this.games.get(ctx.chat.id);
-    if (!game) {
-      await ctx.answerCallbackQuery({ text: "Bu o'yin allaqachon yakunlangan." });
+    // Always answer callback query first to prevent Telegram freeze/spinner
+    await ctx.answerCallbackQuery().catch(() => {});
+
+    // DM Card Inspection
+    if (data.startsWith('dm_card_')) {
+      const catKey = data.replace('dm_card_', '') as CardCategory;
+      await this.handleDMPeekCard(ctx, catKey);
       return;
     }
+
+    const chatId = ctx.chat?.id || this.userActiveGames.get(ctx.from!.id);
+    if (!chatId) return;
+
+    const game = this.games.get(chatId);
+    if (!game) return;
 
     const userId = ctx.from!.id;
     const userName = ctx.from!.first_name || 'O\'yinchi';
 
     // JOIN
     if (data === 'group_join') {
-      if (game.phase !== 'LOBBY') {
-        return ctx.answerCallbackQuery({ text: "O'yin allaqachon boshlangan!", show_alert: true });
-      }
-      if (game.players.has(userId)) {
-        return ctx.answerCallbackQuery({ text: "Siz allaqachon ro'yxatdasiz!" });
-      }
-      if (game.players.size >= 16) {
-        return ctx.answerCallbackQuery({ text: "Xonada joy qolmagan (maks 16 kishi)!", show_alert: true });
-      }
+      if (game.phase !== 'LOBBY') return;
+      if (game.players.has(userId)) return;
+      if (game.players.size >= 16) return;
 
       game.players.set(userId, {
         id: userId,
@@ -158,8 +164,8 @@ export class TelegramGroupGameManager {
         receivedVotesCount: 0
       });
       game.playerOrder.push(userId);
+      this.userActiveGames.set(userId, chatId);
 
-      await ctx.answerCallbackQuery({ text: "Siz o'yinga muvaffaqiyatli qo'shildingiz! 🎉" });
       await this.renderLobbyMessage(ctx, game, ctx.callbackQuery?.message?.message_id);
       return;
     }
@@ -167,39 +173,33 @@ export class TelegramGroupGameManager {
     // LEAVE
     if (data === 'group_leave') {
       if (game.phase !== 'LOBBY') return;
-      if (!game.players.has(userId)) {
-        return ctx.answerCallbackQuery({ text: "Siz o'yinda emassiz." });
-      }
-      if (userId === game.hostId && game.players.size > 1) {
-        // Transfer host
-        game.players.delete(userId);
-        game.playerOrder = game.playerOrder.filter(id => id !== userId);
+      if (!game.players.has(userId)) return;
+
+      game.players.delete(userId);
+      game.playerOrder = game.playerOrder.filter(id => id !== userId);
+      this.userActiveGames.delete(userId);
+
+      if (userId === game.hostId && game.playerOrder.length > 0) {
         game.hostId = game.playerOrder[0];
         game.hostName = game.players.get(game.hostId)?.name || 'Host';
-      } else {
-        game.players.delete(userId);
-        game.playerOrder = game.playerOrder.filter(id => id !== userId);
       }
 
       if (game.players.size === 0) {
-        this.games.delete(ctx.chat.id);
-        await ctx.answerCallbackQuery({ text: "Xona bekor qilindi." });
+        this.games.delete(chatId);
         return;
       }
 
-      await ctx.answerCallbackQuery({ text: "Siz xonadan chiqdingiz." });
       await this.renderLobbyMessage(ctx, game, ctx.callbackQuery?.message?.message_id);
       return;
     }
 
     // RULES
     if (data === 'group_rules') {
-      await ctx.answerCallbackQuery();
       await ctx.reply(
         `📜 <b>BOSHPANA GURUH QOIDALARI:</b>\n\n` +
-        `1. Bot sizga shaxsiy xabarda 7 ta maxfiy kartangizni yuboradi.\n` +
+        `1. Bot sizga shaxsiy xabarda (Lichkada) 7 ta maxfiy kartangizni yuboradi.\n` +
         `2. 1-raundda hamma o'z Kasbini guruhga e'lon qiladi.\n` +
-        `3. Guruh Ovozli Chatida (Voice Chat) yoki guruh matnida kim kerakligini tortishasiz.\n` +
+        `3. Guruh Ovozli Chatida (Voice Chat) kim kerakligini tortishasiz.\n` +
         `4. Raund oxirida guruh so'rovnomasi (Poll) orqali 1 kishi chiqarib yuboriladi!\n` +
         `5. Qolgan 2 ta omon qoluvchi bilan g'alaba hisoblanadi!`,
         { parse_mode: 'HTML' }
@@ -209,15 +209,29 @@ export class TelegramGroupGameManager {
 
     // START GAME
     if (data === 'group_start') {
-      if (userId !== game.hostId) {
-        return ctx.answerCallbackQuery({ text: "Faqat Host o'yinni boshlashi mumkin!", show_alert: true });
-      }
+      if (userId !== game.hostId) return;
       if (game.players.size < 3) {
-        return ctx.answerCallbackQuery({ text: "O'yinni boshlash uchun kamida 3 nafar o'yinchi kerak!", show_alert: true });
+        await ctx.reply("⚠️ O'yinni boshlash uchun kamida 3 nafar o'yinchi kerak!");
+        return;
       }
-
-      await ctx.answerCallbackQuery({ text: "O'yin boshlanmoqda..." });
       await this.startGame(ctx, game);
+      return;
+    }
+
+    // RE-SEND CARDS TO DM
+    if (data === 'group_my_cards') {
+      const player = game.players.get(userId);
+      if (player) {
+        await this.sendPrivateCards(player);
+      }
+      return;
+    }
+
+    // REVEAL CARD IN GROUP
+    if (data.startsWith('group_reveal_')) {
+      const cat = data.replace('group_reveal_', '') as CardCategory;
+      await this.handleRevealCategory(ctx, game, userId, cat);
+      return;
     }
   }
 
@@ -226,7 +240,7 @@ export class TelegramGroupGameManager {
     game.phase = 'ROUND_PITCH';
     const categories: CardCategory[] = ['profession', 'biology', 'health', 'baggage', 'hobby', 'fact', 'special'];
 
-    // Deal cards to each player
+    // Deal unique cards to each player
     for (const player of game.players.values()) {
       const cards: Record<CardCategory, PlayerCardSlot> = {} as any;
       categories.forEach((catKey) => {
@@ -240,7 +254,7 @@ export class TelegramGroupGameManager {
       });
       player.cards = cards;
 
-      // Send private DM with cards
+      // Send private DM with interactive card buttons
       await this.sendPrivateCards(player);
     }
 
@@ -251,14 +265,14 @@ export class TelegramGroupGameManager {
       `🏛 <b>Boshpana:</b> Maydoni ${game.shelterSpecs.areaSqMeters} kv.m, ${game.catastrophe.shelterMonths} oylik resurs.\n` +
       `⚠️ <b>Xavflar:</b> ${game.catastrophe.hazards.join(', ')}\n` +
       `🎯 <b>Boshpanaga faqat ${game.targetSurvivors} nafar eng kerakli mutaxassis kira oladi!</b>\n\n` +
-      `📩 <i>Har bir o'yinchiga shaxsiy xabarda (DM) maxfiy kartalari yuborildi!</i>\n\n` +
+      `📩 <i>Har bir o'yinchining shaxsiyiga (Lichkaga) interaktiv kartalari yuborildi!</i>\n\n` +
       `👇 <b>1-RAUND: KASBLAR JANGI!</b>\n` +
       `O'z kasbingizni guruhga ochish uchun pastdagi tugmani bosing:`;
 
     const keyboard = new InlineKeyboard()
-      .text('🩺 Kasbimni Hammaga Ochish', 'group_reveal_prof')
+      .text('🩺 Kasbimni Hammaga Ochish', 'group_reveal_profession')
       .row()
-      .text('📩 Kartalarimni Qayta Ko\'rish', 'group_my_cards');
+      .text('📩 Mening Kartalarim (Lichka)', 'group_my_cards');
 
     await ctx.api.sendMessage(game.chatId, catastropheMsg, {
       parse_mode: 'HTML',
@@ -266,54 +280,88 @@ export class TelegramGroupGameManager {
     });
   }
 
-  // Send private cards to player DM
-  private async sendPrivateCards(player: GroupPlayer) {
+  // Send private cards with interactive buttons to DM
+  public async sendPrivateCards(player: GroupPlayer) {
     try {
-      const cardList = Object.entries(player.cards).map(([catKey, slot]) => {
-        return `• <b>[${catKey.toUpperCase()}]:</b> ${slot.card.title}`;
-      }).join('\n');
+      const keyboard = new InlineKeyboard()
+        .text(`🩺 Kasb: ${player.cards.profession?.card?.title || '???'}`, 'dm_card_profession')
+        .row()
+        .text(`🧬 Biologiya: ${player.cards.biology?.card?.title || '???'}`, 'dm_card_biology')
+        .row()
+        .text(`💚 Salomatlik: ${player.cards.health?.card?.title || '???'}`, 'dm_card_health')
+        .row()
+        .text(`🎒 Bagaj: ${player.cards.baggage?.card?.title || '???'}`, 'dm_card_baggage')
+        .row()
+        .text(`✨ Xobbi: ${player.cards.hobby?.card?.title || '???'}`, 'dm_card_hobby')
+        .row()
+        .text(`📜 Fakt: ${player.cards.fact?.card?.title || '???'}`, 'dm_card_fact')
+        .row()
+        .text(`⚡ Maxsus: ${player.cards.special?.card?.title || '???'}`, 'dm_card_special');
 
       const dmText = 
-        `🎴 <b>Sizning Maxfiy Boshpana Kartalaringiz:</b>\n\n` +
-        `${cardList}\n\n` +
-        `<i>Eslatma: Guruhda navbatingiz kelganda o'z xislatlaringizni himoya qiling!</i>`;
+        `🎴 <b>Sizning Maxfiy Boshpana Kartalaringiz (Interaktiv):</b>\n\n` +
+        `Batafsil ma'lumot olish uchun quyidagi kartalardan birini bosing:\n` +
+        `<i>Eslatma: Guruhda navbatingiz kelganda kerakli kartani oching!</i>`;
 
-      await this.bot.api.sendMessage(player.id, dmText, { parse_mode: 'HTML' });
+      await this.bot.api.sendMessage(player.id, dmText, { 
+        parse_mode: 'HTML',
+        reply_markup: keyboard
+      });
     } catch (err) {
-      console.warn(`Could not send DM to player ${player.id}. User may not have started the bot.`);
+      console.warn(`Could not send DM to player ${player.id}. User needs to /start bot.`);
     }
   }
 
-  // Reveal profession in group chat
-  public async handleRevealProfession(ctx: Context) {
-    const chatId = ctx.chat?.id;
-    if (!chatId) return;
-    const game = this.games.get(chatId);
-    if (!game) return;
+  // Handle DM Peek on a specific card
+  private async handleDMPeekCard(ctx: Context, category: CardCategory) {
+    const userId = ctx.from?.id;
+    if (!userId) return;
 
-    const userId = ctx.from!.id;
+    const chatId = this.userActiveGames.get(userId);
+    const game = chatId ? this.games.get(chatId) : null;
+    const player = game?.players.get(userId);
+
+    if (!player || !player.cards[category]) {
+      await ctx.reply(`ℹ️ <b>[${category.toUpperCase()}]:</b> Hozircha faol o'yin kartangiz yo'q. Guruhda /boshpana buyrug'ini bering.`);
+      return;
+    }
+
+    const slot = player.cards[category];
+    const infoText = 
+      `🎴 <b>[${category.toUpperCase()}] KARTANGIZ:</b>\n\n` +
+      `🏷 <b>Nomi:</b> <b>${slot.card.title}</b>\n` +
+      `📝 <b>Ta'rifi:</b> <i>${slot.card.description || 'Xususiyat'}</i>\n` +
+      `👁 <b>Holati:</b> ${slot.isRevealed ? '🟢 Hammaga Ochiq' : '🔒 Maxfiy (Faqat sizga ko\'rinadi)'}`;
+
+    await ctx.reply(infoText, { parse_mode: 'HTML' });
+  }
+
+  // Reveal Card Category in Group Chat
+  private async handleRevealCategory(ctx: Context, game: GroupGameState, userId: number, category: CardCategory) {
     const player = game.players.get(userId);
-    if (!player) {
-      return ctx.answerCallbackQuery({ text: "Siz bu o'yinda qatnashmayapsiz." });
+    if (!player) return;
+
+    const slot = player.cards[category];
+    if (!slot) return;
+
+    if (slot.isRevealed) {
+      await ctx.reply(`ℹ️ <b>${player.name}</b> allaqachon [${category.toUpperCase()}] kartasini ochgan.`);
+      return;
     }
 
-    if (player.cards.profession.isRevealed) {
-      return ctx.answerCallbackQuery({ text: "Siz allaqachon kasbingizni ochgansiz!" });
-    }
+    slot.isRevealed = true;
 
-    player.cards.profession.isRevealed = true;
-    await ctx.answerCallbackQuery({ text: "Kasbingiz guruhga e'lon qilindi!" });
-
-    await ctx.reply(
-      `📢 <b>${player.name}</b> o'z kasbini ochdi:\n` +
-      `👉 <b>[KASB]:</b> <b>${player.cards.profession.card.title}</b>\n` +
-      `<i>"${player.cards.profession.card.description || 'Mutaxassis'}"</i>`,
+    await ctx.api.sendMessage(
+      game.chatId,
+      `📢 <b>${player.name}</b> o'z kartasini ochdi:\n` +
+      `👉 <b>[${category.toUpperCase()}]:</b> <b>${slot.card.title}</b>\n` +
+      `<i>"${slot.card.description || 'Xususiyat'}"</i>`,
       { parse_mode: 'HTML' }
     );
 
-    // Check if all alive players revealed their profession
+    // Check if all alive players revealed current round requirement
     const alivePlayers = Array.from(game.players.values()).filter(p => p.isAlive);
-    const allRevealed = alivePlayers.every(p => p.cards.profession.isRevealed);
+    const allRevealed = alivePlayers.every(p => p.cards[category]?.isRevealed);
 
     if (allRevealed) {
       await this.startDebateAndVoting(ctx, game);
@@ -326,16 +374,16 @@ export class TelegramGroupGameManager {
 
     await ctx.api.sendMessage(
       game.chatId,
-      `🗣 <b>BARCHA KASBLAR OCHILDI!</b>\n\n` +
-      `Endi guruhda (yoki Guruh Ovozli Chatida) 60 soniya davomida kim eng kam foydali ekanini muhokama qiling!\n\n` +
-      `⏱ <i>60 soniyadan so'ng chiqarib yuborish bo'yicha so'rovnoma (Ovoz berish) boshlanadi!</i>`,
+      `🗣 <b>BARCHA KARTALAR OCHILDI!</b>\n\n` +
+      `Endi guruhda (yoki Guruh Ovozli Chatida) 45 soniya davomida kim eng kam foydali ekanini muhokama qiling!\n\n` +
+      `⏱ <i>45 soniyadan so'ng chiqarib yuborish bo'yicha so'rovnoma (Ovoz berish) boshlanadi!</i>`,
       { parse_mode: 'HTML' }
     );
 
-    // Wait 45 seconds then trigger Poll Voting
+    // Wait 40 seconds then trigger Poll Voting
     setTimeout(async () => {
       await this.launchVotingPoll(game);
-    }, 45000);
+    }, 40000);
   }
 
   // Launch Telegram Native Poll for Voting
@@ -352,15 +400,15 @@ export class TelegramGroupGameManager {
         pollOptions,
         {
           is_anonymous: false,
-          open_period: 45 // 45 seconds to vote
+          open_period: 40 // 40 seconds to vote
         }
       );
       game.votingPollMessageId = pollMsg.message_id;
 
-      // Schedule poll resolution after 45 seconds
+      // Schedule poll resolution after 41 seconds
       setTimeout(async () => {
         await this.resolveGroupVoting(game);
-      }, 46000);
+      }, 41000);
     } catch (err) {
       console.error("Poll launch error:", err);
     }
@@ -404,7 +452,7 @@ export class TelegramGroupGameManager {
       game.roundNumber += 1;
       setTimeout(async () => {
         await this.startNextGroupRound(game);
-      }, 10000);
+      }, 8000);
     }
   }
 
@@ -416,7 +464,7 @@ export class TelegramGroupGameManager {
     const keyboard = new InlineKeyboard()
       .text(`🔓 [${currentCat.toUpperCase()}] Kartamni Ochish`, `group_reveal_${currentCat}`)
       .row()
-      .text('📩 Kartalarimni Ko\'rish', 'group_my_cards');
+      .text('📩 Mening Kartalarim (Lichka)', 'group_my_cards');
 
     await this.bot.api.sendMessage(
       game.chatId,
