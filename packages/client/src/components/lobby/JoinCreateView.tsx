@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, ArrowRight, Play, Printer, Smartphone, MessageSquare } from 'lucide-react';
+import { 
+  Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, 
+  ArrowRight, Play, Printer, Smartphone, MessageSquare, CheckCircle2 
+} from 'lucide-react';
+import { GameMode } from '@boshpana/shared';
 import { sound } from '../../services/sound';
 
 interface JoinCreateViewProps {
   initialName?: string;
   initialRoomCode?: string;
-  onCreateRoom: (name: string) => void;
+  onCreateRoom: (name: string, mode?: GameMode) => void;
   onJoinRoom: (roomCode: string, name: string) => void;
   onOpenPrintView?: () => void;
   onOpenPassAndPlay?: () => void;
@@ -19,6 +23,7 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
   onOpenPrintView,
   onOpenPassAndPlay
 }) => {
+  const [selectedMode, setSelectedMode] = useState<GameMode>('PASS_AND_PLAY');
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState(initialName || 'Omon Qoluvchi');
   const [roomCode, setRoomCode] = useState(initialRoomCode || '');
@@ -29,6 +34,7 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
     if (initialRoomCode) {
       setTab('join');
       setRoomCode(initialRoomCode);
+      setSelectedMode('ONLINE_FULL');
     }
   }, [initialRoomCode]);
 
@@ -37,11 +43,23 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
     setIsMuted(muted);
   };
 
+  const handleSelectMode = (mode: GameMode) => {
+    sound.playClick();
+    setSelectedMode(mode);
+    if (mode === 'PASS_AND_PLAY' && onOpenPassAndPlay) {
+      // Optional direct launch
+    }
+  };
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (playerName.trim()) {
-      sound.playClick();
-      onCreateRoom(playerName.trim());
+    if (!playerName.trim()) return;
+
+    sound.playClick();
+    if (selectedMode === 'PASS_AND_PLAY' && onOpenPassAndPlay) {
+      onOpenPassAndPlay();
+    } else {
+      onCreateRoom(playerName.trim(), selectedMode);
     }
   };
 
@@ -102,7 +120,7 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
         </div>
       </div>
 
-      {/* Hero Banner (Shelter42 Style) */}
+      {/* Hero Banner */}
       <div className="text-center space-y-3 pt-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hazard-orange/15 border border-hazard-orange/40 text-hazard-orange text-[11px] font-mono font-bold uppercase tracking-widest animate-pulse">
           <AlertTriangle size={13} />
@@ -114,194 +132,275 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
         </h1>
 
         <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-          Falokatdan so'ng boshpanada joylar cheklangan. Har kim o'z kasbi, bilimi va mahoratini isbotlab, bunkerda qolishga loyiqligini ko'rsatishi shart!
+          Falokatdan so'ng boshpanada joylar cheklangan. Boshlashdan oldin o'zingizga mos o'yin rejimini tanlang!
         </p>
       </div>
 
-      {/* Tab Selector: Create vs Join */}
-      <div className="grid grid-cols-2 p-1 rounded-xl bg-bunker-900 border border-slate-800">
-        <button
-          type="button"
-          onClick={() => { sound.playClick(); setTab('create'); }}
-          className={`py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-            tab === 'create'
-              ? 'bg-hazard-orange text-white shadow-hazard-sm'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Xona Yaratish
-        </button>
-
-        <button
-          type="button"
-          onClick={() => { sound.playClick(); setTab('join'); }}
-          className={`py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-            tab === 'join'
-              ? 'bg-hazard-orange text-white shadow-hazard-sm'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Xonaga Ulanish
-        </button>
-      </div>
-
-      {/* Form Card */}
-      <div className="bg-bunker-900 border-2 border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl girih-card">
-        {tab === 'create' ? (
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono text-slate-300 block">
-                Ismingiz yoki Taxallusingiz:
-              </label>
-              <input
-                type="text"
-                required
-                maxLength={24}
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Masalan: Sardor, Komil..."
-                className="w-full px-4 py-3 rounded-xl bg-bunker-950 border border-slate-800 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-hazard-orange focus:ring-1 focus:ring-hazard-orange font-medium text-sm transition-all"
-              />
-            </div>
-
-            <div className="p-3 rounded-xl bg-bunker-950 border border-slate-800/80 text-xs text-slate-400 space-y-1">
-              <p className="flex items-center gap-1.5 text-slate-300 font-medium">
-                <Sparkles size={13} className="text-amber-400" />
-                <span>Siz xona egasi (Host) bo'lasiz</span>
-              </p>
-              <p>O'yin qoidalari, raundlar soni va kartalar to'plamini o'zingiz boshqarasiz.</p>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 px-6 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-2 shadow-hazard-sm transition-all active:scale-98"
-            >
-              <Play size={16} />
-              <span>Yangi Xona Ochish</span>
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleJoin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono text-slate-300 block">
-                Ismingiz yoki Taxallusingiz:
-              </label>
-              <input
-                type="text"
-                required
-                maxLength={24}
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Ismingiz..."
-                className="w-full px-4 py-3 rounded-xl bg-bunker-950 border border-slate-800 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-hazard-orange focus:ring-1 focus:ring-hazard-orange font-medium text-sm transition-all"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono text-slate-300 block">
-                Xona Kodi (Room Code):
-              </label>
-              <input
-                type="text"
-                required
-                maxLength={10}
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                placeholder="Masalan: BOSH-782"
-                className="w-full px-4 py-3 rounded-xl bg-bunker-950 border border-slate-800 text-hazard-orange font-mono font-bold tracking-wider placeholder-slate-600 focus:outline-none focus:border-hazard-orange focus:ring-1 focus:ring-hazard-orange text-sm transition-all uppercase"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 px-6 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white flex items-center justify-center gap-2 shadow-cyber-cyan transition-all active:scale-98"
-            >
-              <ArrowRight size={16} />
-              <span>Xonaga Qo'shilish</span>
-            </button>
-          </form>
-        )}
-      </div>
-
-      {/* ================= 4 TA O'YIN REJIMI TANLOVI ================= */}
-      <div className="space-y-3 pt-2">
-        <h3 className="text-xs font-mono font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-          <Sparkles size={14} className="text-hazard-orange" />
-          <span>O'yin Rejimini Tanlang:</span>
-        </h3>
+      {/* ================= 1. MANDATORY GAME MODE SELECTOR ================= */}
+      <div className="space-y-2.5">
+        <label className="text-xs font-mono font-black uppercase text-amber-400 tracking-wider flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Sparkles size={14} className="text-hazard-orange" />
+            <span>1-QADAM: O'yin Rejimini Tanlang (Majburiy):</span>
+          </span>
+          <span className="text-[10px] text-slate-400 font-sans font-normal">Rejim tanlandi ✓</span>
+        </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {/* Rejim 1: Bitta Telefon (Qo'lma-qo'l - Spyfall) */}
-          {onOpenPassAndPlay && (
-            <button
-              type="button"
-              onClick={onOpenPassAndPlay}
-              className="p-3.5 rounded-2xl bg-gradient-to-br from-hazard-orange/20 to-bunker-900 border-2 border-hazard-orange/60 hover:border-hazard-orange text-left space-y-1.5 transition-all shadow-md active:scale-98 group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-white uppercase flex items-center gap-1.5">
-                  <Smartphone size={15} className="text-hazard-orange" />
-                  <span>📱 Bitta Telefon (Qo'lma-qo'l)</span>
+          
+          {/* Mode 1: Bitta Telefon (Pass & Play) */}
+          <button
+            type="button"
+            onClick={() => handleSelectMode('PASS_AND_PLAY')}
+            className={`p-3.5 rounded-2xl text-left space-y-1.5 transition-all shadow-md active:scale-98 relative border-2 ${
+              selectedMode === 'PASS_AND_PLAY'
+                ? 'bg-hazard-orange/20 border-hazard-orange shadow-hazard-md'
+                : 'bg-bunker-900/90 border-slate-800 hover:border-slate-700 opacity-80'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-white uppercase flex items-center gap-1.5">
+                <Smartphone size={15} className="text-hazard-orange" />
+                <span>📱 Bitta Telefon (Qo'lma-qo'l)</span>
+              </span>
+              {selectedMode === 'PASS_AND_PLAY' ? (
+                <CheckCircle2 size={16} className="text-hazard-orange" />
+              ) : (
+                <span className="text-[9px] font-mono uppercase bg-hazard-orange/80 text-white px-1.5 py-0.5 rounded font-bold">
+                  Tavsiya!
                 </span>
-                <span className="text-[9px] font-mono uppercase bg-hazard-orange text-white px-1.5 py-0.5 rounded font-bold">
-                  TAVSIYA!
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 leading-tight">
-                Davrada faqat 1 ta telefon qo'lma-qo'l o'tadi (Spyfall uslubida). Internetsiz ham o'ynash mumkin!
-              </p>
-            </button>
-          )}
+              )}
+            </div>
+            <p className="text-[11px] text-slate-300 leading-tight">
+              Davrada faqat 1 ta telefon qo'lma-qo'l o'tadi (Spyfall uslubida). Internetsiz ham o'ynash mumkin!
+            </p>
+          </button>
 
-          {/* Rejim 2: Jonli Davra (Gibrid / Real Hayot) */}
-          <div className="p-3.5 rounded-2xl bg-bunker-900/90 border border-slate-800 text-left space-y-1.5">
+          {/* Mode 2: Jonli Davra (Gibrid) */}
+          <button
+            type="button"
+            onClick={() => handleSelectMode('HYBRID_OFFLINE')}
+            className={`p-3.5 rounded-2xl text-left space-y-1.5 transition-all shadow-md active:scale-98 relative border-2 ${
+              selectedMode === 'HYBRID_OFFLINE'
+                ? 'bg-emerald-950/40 border-emerald-500 shadow-lg'
+                : 'bg-bunker-900/90 border-slate-800 hover:border-slate-700 opacity-80'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-slate-200 uppercase flex items-center gap-1.5">
                 <Users size={15} className="text-emerald-400" />
                 <span>🎲 Jonli Davra (Gibrid)</span>
               </span>
-              <span className="text-[9px] font-mono uppercase bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded">
-                Stol O'yini
-              </span>
+              {selectedMode === 'HYBRID_OFFLINE' && (
+                <CheckCircle2 size={16} className="text-emerald-400" />
+              )}
             </div>
             <p className="text-[11px] text-slate-400 leading-tight">
-              Kartalarni har kim o'z telefonida ko'radi, gapirish va muhokama 100% real hayotda davrada bo'ladi!
+              Kartalarni har kim o'z telefonida ko'radi, gapirish va tortishuv 100% davrada jonli bo'ladi!
             </p>
-          </div>
+          </button>
 
-          {/* Rejim 3: To'liq Online (TMA) */}
-          <div className="p-3.5 rounded-2xl bg-bunker-900/90 border border-slate-800 text-left space-y-1.5">
+          {/* Mode 3: To'liq Online (TMA) */}
+          <button
+            type="button"
+            onClick={() => handleSelectMode('ONLINE_FULL')}
+            className={`p-3.5 rounded-2xl text-left space-y-1.5 transition-all shadow-md active:scale-98 relative border-2 ${
+              selectedMode === 'ONLINE_FULL'
+                ? 'bg-cyan-950/40 border-cyan-500 shadow-lg'
+                : 'bg-bunker-900/90 border-slate-800 hover:border-slate-700 opacity-80'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-slate-200 uppercase flex items-center gap-1.5">
                 <Sparkles size={15} className="text-cyan-400" />
                 <span>🌐 To'liq Online (TMA)</span>
               </span>
-              <span className="text-[9px] font-mono uppercase bg-cyan-950 text-cyan-400 border border-cyan-800 px-1.5 py-0.5 rounded">
-                Real vaqt
-              </span>
+              {selectedMode === 'ONLINE_FULL' && (
+                <CheckCircle2 size={16} className="text-cyan-400" />
+              )}
             </div>
             <p className="text-[11px] text-slate-400 leading-tight">
-              Barchasi Telegram WebApp ichida: jonli vaqt taymeri, chat, reaksiyalar va anonim ovoz berish.
+              Telegram WebApp ichida: jonli vaqt taymeri, chat, reaksiyalar va anonim ovoz berish.
             </p>
-          </div>
+          </button>
 
-          {/* Rejim 4: Telegram Guruh (Mafia Bot) */}
-          <div className="p-3.5 rounded-2xl bg-bunker-900/90 border border-slate-800 text-left space-y-1.5">
+          {/* Mode 4: Telegram Guruh (Mafia Bot) */}
+          <button
+            type="button"
+            onClick={() => handleSelectMode('TELEGRAM_GROUP')}
+            className={`p-3.5 rounded-2xl text-left space-y-1.5 transition-all shadow-md active:scale-98 relative border-2 ${
+              selectedMode === 'TELEGRAM_GROUP'
+                ? 'bg-purple-950/40 border-purple-500 shadow-lg'
+                : 'bg-bunker-900/90 border-slate-800 hover:border-slate-700 opacity-80'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-slate-200 uppercase flex items-center gap-1.5">
                 <MessageSquare size={15} className="text-purple-400" />
                 <span>👥 Guruh Rejimi (Mafia Bot)</span>
               </span>
-              <span className="text-[9px] font-mono uppercase bg-purple-950 text-purple-400 border border-purple-800 px-1.5 py-0.5 rounded">
-                Telegram Guruh
-              </span>
+              {selectedMode === 'TELEGRAM_GROUP' && (
+                <CheckCircle2 size={16} className="text-purple-400" />
+              )}
             </div>
             <p className="text-[11px] text-slate-400 leading-tight">
               Telegram guruhga botni qo'shib, guruh chatida va guruh ovozli qo'ng'irog'ida o'ynash!
             </p>
-          </div>
+          </button>
+
         </div>
       </div>
+
+      {/* ================= 2. ACTION PANEL BASED ON SELECTED MODE ================= */}
+      {selectedMode === 'PASS_AND_PLAY' ? (
+        <div className="bg-bunker-900 border-2 border-hazard-orange/60 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 animate-fadeIn">
+          <div className="flex items-center gap-2 text-hazard-orange font-bold text-xs uppercase">
+            <Smartphone size={16} />
+            <span>Tanlangan Rejim: 📱 Bitta Telefon (Qo'lma-qo'l)</span>
+          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Bu rejimda hech qanday server yoki xona kodi kerak emas. Ismlarni kiritib, 1 ta telefonni o'yinchilarga navbat bilan berib o'ynaysiz.
+          </p>
+
+          <button
+            type="button"
+            onClick={onOpenPassAndPlay}
+            className="w-full py-3.5 px-6 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-2 shadow-hazard-lg transition-all active:scale-98 animate-pulse"
+          >
+            <Play size={16} />
+            <span>📱 Bitta Telefon Rejimini Boshlash</span>
+          </button>
+        </div>
+      ) : selectedMode === 'TELEGRAM_GROUP' ? (
+        <div className="bg-bunker-900 border-2 border-purple-500/60 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 animate-fadeIn">
+          <div className="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase">
+            <MessageSquare size={16} />
+            <span>Tanlangan Rejim: 👥 Telegram Guruh Rejimi</span>
+          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Botni o'z do'stlaringiz bor Telegram guruhga qo'shing va guruh chatida <b>/boshpana</b> deb yozing. Bot shaxsiy kartalarni lichkaga yuboradi va guruhda so'rovnoma orqali o'yinni boshqaradi!
+          </p>
+
+          <a
+            href="https://t.me/boshpana_gamebot?startgroup=true"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3.5 px-6 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center gap-2 shadow-lg transition-all active:scale-98 block text-center"
+          >
+            <Users size={16} />
+            <span>Botni Telegram Guruhga Qo'shish ➡️</span>
+          </a>
+        </div>
+      ) : (
+        /* Hybrid / Full Online Rooms */
+        <div className="space-y-4 animate-fadeIn">
+          {/* Tab Selector: Create vs Join */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-bunker-900 border border-slate-800">
+            <button
+              type="button"
+              onClick={() => { sound.playClick(); setTab('create'); }}
+              className={`py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                tab === 'create'
+                  ? 'bg-hazard-orange text-white shadow-hazard-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Xona Yaratish
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { sound.playClick(); setTab('join'); }}
+              className={`py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                tab === 'join'
+                  ? 'bg-hazard-orange text-white shadow-hazard-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Xonaga Ulanish
+            </button>
+          </div>
+
+          <div className="bg-bunker-900 border-2 border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl girih-card">
+            {tab === 'create' ? (
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono text-slate-300 block">
+                    Ismingiz yoki Taxallusingiz:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={24}
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    placeholder="Masalan: Sardor, Komil..."
+                    className="w-full px-4 py-3 rounded-xl bg-bunker-950 border border-slate-800 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-hazard-orange focus:ring-1 focus:ring-hazard-orange font-medium text-sm transition-all"
+                  />
+                </div>
+
+                <div className="p-3 rounded-xl bg-bunker-950 border border-slate-800/80 text-xs text-slate-400 space-y-1">
+                  <p className="flex items-center gap-1.5 text-slate-300 font-medium">
+                    <Sparkles size={13} className="text-amber-400" />
+                    <span>Siz xona egasi (Host) bo'lasiz</span>
+                  </p>
+                  <p>
+                    Rejim: <b>{selectedMode === 'HYBRID_OFFLINE' ? '🎲 Jonli Davra (Gibrid)' : '🌐 To\'liq Online (TMA)'}</b>
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-hazard-orange to-red-600 hover:from-hazard-orangeDark hover:to-red-700 text-white flex items-center justify-center gap-2 shadow-hazard-sm transition-all active:scale-98"
+                >
+                  <Play size={16} />
+                  <span>Xonani Ochish ➡️</span>
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleJoin} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono text-slate-300 block">
+                    Ismingiz yoki Taxallusingiz:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={24}
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    placeholder="Ismingiz..."
+                    className="w-full px-4 py-3 rounded-xl bg-bunker-950 border border-slate-800 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-hazard-orange focus:ring-1 focus:ring-hazard-orange font-medium text-sm transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono text-slate-300 block">
+                    Xona Kodi (Room Code):
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={10}
+                    value={roomCode}
+                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                    placeholder="Masalan: BOSH-782"
+                    className="w-full px-4 py-3 rounded-xl bg-bunker-950 border border-slate-800 text-hazard-orange font-mono font-bold tracking-wider placeholder-slate-600 focus:outline-none focus:border-hazard-orange focus:ring-1 focus:ring-hazard-orange text-sm transition-all uppercase"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white flex items-center justify-center gap-2 shadow-cyber-cyan transition-all active:scale-98"
+                >
+                  <ArrowRight size={16} />
+                  <span>Xonaga Qo'shilish</span>
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Rules Modal */}
       {showRules && (

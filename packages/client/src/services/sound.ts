@@ -124,6 +124,10 @@ class SoundEngine {
     osc.stop(now + 0.9);
   }
 
+  public playGong() {
+    this.playVoteGong();
+  }
+
   // 6. Elimination Thud (Heart drop)
   public playElimination() {
     if (this.isMuted) return;

@@ -207,14 +207,34 @@ export class TelegramGroupGameManager {
       return;
     }
 
-    // START GAME
+    // START GAME (PROMPT GROUP GAME MODE)
     if (data === 'group_start') {
       if (userId !== game.hostId) return;
       if (game.players.size < 3) {
         await ctx.reply("⚠️ O'yinni boshlash uchun kamida 3 nafar o'yinchi kerak!");
         return;
       }
-      await this.startGame(ctx, game);
+
+      const modeKeyboard = new InlineKeyboard()
+        .text('🗳️ 1. Matn & So\'rovnomalar (Polls)', 'group_mode_poll')
+        .row()
+        .text('🎙️ 2. Guruh Ovozli Chat (Voice Chat)', 'group_mode_voice')
+        .row()
+        .text('🕹️ 3. Mini App Guruh Xonasi (TMA)', 'group_mode_tma');
+
+      await ctx.reply(
+        `🎮 <b>Guruh O'yin Rejimini Tanlang:</b>\n\n` +
+        `1. <b>🗳️ Matn & So'rovnomalar:</b> Bot kartalarni lichkaga yuboradi, guruhda ovoz berish so'rovnomalari o'tkaziladi.\n` +
+        `2. <b>🎙️ Guruh Ovozli Chat:</b> O'yinchilar Telegram Voice Chatida gaplashadi, bot raundlarni boshqaradi.\n` +
+        `3. <b>🕹️ Mini App Xonasi:</b> Guruh uchun yagona sinxron Mini App havolasi yaratiladi.`,
+        { parse_mode: 'HTML', reply_markup: modeKeyboard }
+      );
+      return;
+    }
+
+    if (data === 'group_mode_poll' || data === 'group_mode_voice' || data === 'group_mode_tma') {
+      if (userId !== game.hostId) return;
+      await this.startGame(ctx, game, data);
       return;
     }
 
@@ -236,7 +256,7 @@ export class TelegramGroupGameManager {
   }
 
   // ================= 3. START GAME & DEAL CARDS =================
-  private async startGame(ctx: Context, game: GroupGameState) {
+  private async startGame(ctx: Context, game: GroupGameState, groupMode: string = 'group_mode_poll') {
     game.phase = 'ROUND_PITCH';
     const categories: CardCategory[] = ['profession', 'biology', 'health', 'baggage', 'hobby', 'fact', 'special'];
 
@@ -258,14 +278,21 @@ export class TelegramGroupGameManager {
       await this.sendPrivateCards(player);
     }
 
+    const modeName = groupMode === 'group_mode_voice' 
+      ? '🎙️ Guruh Ovozli Chat (Voice Chat) Rejimi' 
+      : groupMode === 'group_mode_tma'
+      ? '🕹️ Mini App Guruh Xonasi'
+      : '🗳️ Matn & So\'rovnomalar Rejimi';
+
     // Announce Catastrophe in Group
     const catastropheMsg = 
       `🚨 <b>FALOKAT YUZ BERDI: ${game.catastrophe.title.toUpperCase()}!</b>\n\n` +
+      `🎮 <b>Tanlangan Rejim:</b> <i>${modeName}</i>\n` +
       `📖 <b>Tafsilot:</b> ${game.catastrophe.shortDesc}\n\n` +
       `🏛 <b>Boshpana:</b> Maydoni ${game.shelterSpecs.areaSqMeters} kv.m, ${game.catastrophe.shelterMonths} oylik resurs.\n` +
       `⚠️ <b>Xavflar:</b> ${game.catastrophe.hazards.join(', ')}\n` +
       `🎯 <b>Boshpanaga faqat ${game.targetSurvivors} nafar eng kerakli mutaxassis kira oladi!</b>\n\n` +
-      `📩 <i>Har bir o'yinchining shaxsiyiga (Lichkaga) interaktiv kartalari yuborildi!</i>\n\n` +
+      `📩 <i>Har bir o'yinchining shaxsiyiga (Lichkaga) maxfiy kartalari yuborildi!</i>\n\n` +
       `👇 <b>1-RAUND: KASBLAR JANGI!</b>\n` +
       `O'z kasbingizni guruhga ochish uchun pastdagi tugmani bosing:`;
 

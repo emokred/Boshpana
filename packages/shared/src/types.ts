@@ -1,4 +1,5 @@
 export type DeckTheme = 'classic' | 'uzbek' | 'nsfw18';
+export type GameMode = 'PASS_AND_PLAY' | 'HYBRID_OFFLINE' | 'ONLINE_FULL' | 'TELEGRAM_GROUP';
 
 export type CardCategory =
   | 'profession'
