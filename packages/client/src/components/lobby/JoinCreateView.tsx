@@ -15,7 +15,6 @@ interface JoinCreateViewProps {
   onOpenPassAndPlay?: () => void;
   onOpenDeckStudio?: () => void;
   onOpenLeaderboard?: () => void;
-  onOpenBrandIdentity?: () => void;
 }
 
 export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
@@ -26,8 +25,7 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
   onOpenPrintView,
   onOpenPassAndPlay,
   onOpenDeckStudio,
-  onOpenLeaderboard,
-  onOpenBrandIdentity
+  onOpenLeaderboard
 }) => {
   const [selectedMode, setSelectedMode] = useState<GameMode>('PASS_AND_PLAY');
   const [tab, setTab] = useState<'create' | 'join'>('create');
@@ -112,18 +110,6 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
             >
               <Sparkles size={14} />
               <span className="hidden sm:inline">Studiy</span>
-            </button>
-          )}
-
-          {onOpenBrandIdentity && (
-            <button
-              type="button"
-              onClick={onOpenBrandIdentity}
-              className="px-2.5 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/50 text-xs font-black flex items-center gap-1.5 transition-all shadow-sm"
-              title="Rasmiy Logo va Brend (VAULTBEK)"
-            >
-              <Shield size={14} className="text-purple-400" />
-              <span className="hidden sm:inline">Brend</span>
             </button>
           )}
 
