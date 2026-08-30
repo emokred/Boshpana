@@ -13,6 +13,7 @@ interface JoinCreateViewProps {
   onJoinRoom: (roomCode: string, name: string) => void;
   onOpenPrintView?: () => void;
   onOpenPassAndPlay?: () => void;
+  onOpenDeckStudio?: () => void;
 }
 
 export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
@@ -21,7 +22,8 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
   onCreateRoom,
   onJoinRoom,
   onOpenPrintView,
-  onOpenPassAndPlay
+  onOpenPassAndPlay,
+  onOpenDeckStudio
 }) => {
   const [selectedMode, setSelectedMode] = useState<GameMode>('PASS_AND_PLAY');
   const [tab, setTab] = useState<'create' | 'join'>('create');
@@ -85,6 +87,18 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onOpenDeckStudio && (
+            <button
+              type="button"
+              onClick={onOpenDeckStudio}
+              className="px-2.5 py-1.5 rounded-xl bg-[#FBBF24]/20 hover:bg-[#FBBF24]/30 text-[#FBBF24] border border-[#FBBF24]/50 text-xs font-black flex items-center gap-1.5 transition-all shadow-sm"
+              title="Yangi Karta va Falokat Yaratish (Vault-Bek Studio)"
+            >
+              <Sparkles size={14} />
+              <span className="hidden sm:inline">Karta Studiyasi</span>
+            </button>
+          )}
+
           {onOpenPrintView && (
             <button
               type="button"

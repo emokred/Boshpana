@@ -7,6 +7,7 @@ import { LobbyView } from './components/lobby/LobbyView';
 import { GameBoardView } from './components/game/GameBoardView';
 import { DeckPrintView } from './components/export/DeckPrintView';
 import { PassAndPlayView } from './components/passandplay/PassAndPlayView';
+import { DeckStudioView } from './components/studio/DeckStudioView';
 
 export const App: React.FC = () => {
   const { tgUser, startParam, triggerHaptic } = useTelegram();
@@ -16,6 +17,7 @@ export const App: React.FC = () => {
   const [initialRoomCode, setInitialRoomCode] = useState<string>('');
   const [isPrintViewOpen, setIsPrintViewOpen] = useState<boolean>(false);
   const [isPassAndPlayOpen, setIsPassAndPlayOpen] = useState<boolean>(false);
+  const [isDeckStudioOpen, setIsDeckStudioOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -122,6 +124,10 @@ export const App: React.FC = () => {
     return <PassAndPlayView onExit={() => setIsPassAndPlayOpen(false)} />;
   }
 
+  if (isDeckStudioOpen) {
+    return <DeckStudioView onBack={() => setIsDeckStudioOpen(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-bunker-950 text-slate-100 bunker-grid relative scanlines">
       {!roomState ? (
@@ -132,6 +138,7 @@ export const App: React.FC = () => {
           onJoinRoom={handleJoinRoom}
           onOpenPrintView={() => setIsPrintViewOpen(true)}
           onOpenPassAndPlay={() => setIsPassAndPlayOpen(true)}
+          onOpenDeckStudio={() => setIsDeckStudioOpen(true)}
         />
       ) : roomState.phase === 'LOBBY' ? (
         <LobbyView
