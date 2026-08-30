@@ -9,6 +9,7 @@ import { DeckPrintView } from './components/export/DeckPrintView';
 import { PassAndPlayView } from './components/passandplay/PassAndPlayView';
 import { DeckStudioView } from './components/studio/DeckStudioView';
 import { LeaderboardView } from './components/leaderboard/LeaderboardView';
+import { BrandIdentityView } from './components/studio/BrandIdentityView';
 
 export const App: React.FC = () => {
   const { tgUser, startParam, triggerHaptic } = useTelegram();
@@ -20,6 +21,7 @@ export const App: React.FC = () => {
   const [isPassAndPlayOpen, setIsPassAndPlayOpen] = useState<boolean>(false);
   const [isDeckStudioOpen, setIsDeckStudioOpen] = useState<boolean>(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
+  const [isBrandIdentityOpen, setIsBrandIdentityOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -134,6 +136,10 @@ export const App: React.FC = () => {
     return <LeaderboardView playerName={tgUser.displayName} onBack={() => setIsLeaderboardOpen(false)} />;
   }
 
+  if (isBrandIdentityOpen) {
+    return <BrandIdentityView onBack={() => setIsBrandIdentityOpen(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-bunker-950 text-slate-100 bunker-grid relative scanlines">
       {!roomState ? (
@@ -146,6 +152,7 @@ export const App: React.FC = () => {
           onOpenPassAndPlay={() => setIsPassAndPlayOpen(true)}
           onOpenDeckStudio={() => setIsDeckStudioOpen(true)}
           onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+          onOpenBrandIdentity={() => setIsBrandIdentityOpen(true)}
         />
       ) : roomState.phase === 'LOBBY' ? (
         <LobbyView

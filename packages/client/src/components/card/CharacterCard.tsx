@@ -188,13 +188,25 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
         )}
       </div>
 
-      {/* BOTTOM: Bold Punchy Title Banner */}
-      <div className="relative z-20 space-y-1.5 px-1 pb-0.5">
+      {/* BOTTOM: Bold Punchy Title Banner & Description */}
+      <div className="relative z-20 space-y-1 px-1 pb-0.5">
         {showContent ? (
-          <div className={`p-2 rounded-xl border-2 text-center shadow-lg transition-transform ${meta.titleBg}`}>
-            <h4 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-tight drop-shadow-md">
-              {card.title}
-            </h4>
+          <div className="space-y-1">
+            {/* Title Banner */}
+            <div className={`p-1.5 sm:p-2 rounded-xl border-2 text-center shadow-lg transition-transform ${meta.titleBg}`}>
+              <h4 className="text-xs sm:text-sm font-black tracking-wide uppercase leading-tight drop-shadow-md">
+                {card.title}
+              </h4>
+            </div>
+
+            {/* Description / Flavor Text */}
+            {card.description && (
+              <div className="p-1.5 rounded-lg bg-black/60 border border-slate-800 text-center">
+                <p className="text-[10px] sm:text-[11px] text-slate-300 font-medium leading-tight line-clamp-2">
+                  {card.description}
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-2 rounded-xl border border-slate-800 bg-bunker-950/80 text-center">
