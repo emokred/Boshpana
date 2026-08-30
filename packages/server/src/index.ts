@@ -74,6 +74,7 @@ async function bootstrap() {
       bot.api.setMyCommands([
         { command: 'start', description: '🎮 Asosiy Menyu & O\'yin' },
         { command: 'cards', description: '🎴 Mening Kartalarim (Lichka)' },
+        { command: 'reyting', description: '🏆 Global Reyting & Profil' },
         { command: 'boshpana', description: '🚪 Guruhda o\'yin xonasi ochish' },
         { command: 'stopgame', description: '🛑 Guruh o\'yinini to\'xtatish' },
         { command: 'qoidalar', description: '📜 O\'yin qoidalari va yo\'riqnoma' },
@@ -87,7 +88,9 @@ async function bootstrap() {
           .webApp('🕹 O\'yinni Boshlash (Mini App)', targetUrl)
           .text('🎴 Mening Kartalarim')
           .row()
+          .text('🏆 Global Reyting')
           .text('📜 O\'yin Qoidalari')
+          .row()
           .text('ℹ️ Yordam & Ma\'lumot');
 
         if (userId === SUPER_ADMIN_ID) {
@@ -255,6 +258,36 @@ async function bootstrap() {
 
       bot.hears('📜 O\'yin Qoidalari', async (ctx) => {
         await renderRulesMenu(ctx, 'main');
+      });
+
+      bot.hears('🏆 Global Reyting', async (ctx) => {
+        const targetUrl = WEBAPP_URL.startsWith('http') ? WEBAPP_URL : `https://${WEBAPP_URL}`;
+        const keyboard = new InlineKeyboard()
+          .webApp('🏆 Mini Appda Reytingni Ochish', targetUrl);
+
+        await ctx.reply(
+          `🏆 <b>BOSHPANA GLOBAL REYTINGI VA PROFILINGIZ:</b>\n\n` +
+          `🎖 <b>Top Omon Qoluvchilar:</b>\n` +
+          `1. 👑 <b>Sardor_2055</b> — 34 g'alaba (81%)\n` +
+          `2. 🎖 <b>Malika_Toshkent</b> — 28 g'alaba (78%)\n` +
+          `3. 🎖 <b>Rustam_Polvon</b> — 22 g'alaba (73%)\n` +
+          `4. 🛡 <b>Usta_Temur</b> — 19 g'alaba (76%)\n` +
+          `5. 🛡 <b>Komil_Oshpaz</b> — 14 g'alaba (70%)\n\n` +
+          `🏅 O'z yutuqlaringiz va nishonlaringizni to'liq ko'rish uchun pastdagi tugmani bosing:`,
+          { parse_mode: 'HTML', reply_markup: keyboard }
+        );
+      });
+
+      bot.command(['profile', 'stats', 'leaderboard', 'reyting'], async (ctx) => {
+        const targetUrl = WEBAPP_URL.startsWith('http') ? WEBAPP_URL : `https://${WEBAPP_URL}`;
+        const keyboard = new InlineKeyboard()
+          .webApp('🏆 Profil & Yutuqlarni Ko\'rish', targetUrl);
+
+        await ctx.reply(
+          `👤 <b>SIZNING BOSHPANA PROFILINGIZ:</b>\n\n` +
+          `O'yindagi g'alabalaringiz, omon qolish foizingiz va ochilgan nishonlaringizni ko'rish uchun Mini Appni oching:`,
+          { parse_mode: 'HTML', reply_markup: keyboard }
+        );
       });
 
       bot.hears('ℹ️ Yordam & Ma\'lumot', async (ctx) => {

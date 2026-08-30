@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Users, Sparkles, BookOpen, Volume2, VolumeX, AlertTriangle, 
-  ArrowRight, Play, Printer, Smartphone, MessageSquare, CheckCircle2 
+  ArrowRight, Play, Printer, Smartphone, MessageSquare, CheckCircle2, Trophy 
 } from 'lucide-react';
 import { GameMode } from '@boshpana/shared';
 import { sound } from '../../services/sound';
@@ -14,6 +14,7 @@ interface JoinCreateViewProps {
   onOpenPrintView?: () => void;
   onOpenPassAndPlay?: () => void;
   onOpenDeckStudio?: () => void;
+  onOpenLeaderboard?: () => void;
 }
 
 export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
@@ -23,7 +24,8 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
   onJoinRoom,
   onOpenPrintView,
   onOpenPassAndPlay,
-  onOpenDeckStudio
+  onOpenDeckStudio,
+  onOpenLeaderboard
 }) => {
   const [selectedMode, setSelectedMode] = useState<GameMode>('PASS_AND_PLAY');
   const [tab, setTab] = useState<'create' | 'join'>('create');
@@ -87,6 +89,18 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onOpenLeaderboard && (
+            <button
+              type="button"
+              onClick={onOpenLeaderboard}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 text-xs font-black flex items-center gap-1.5 transition-all shadow-sm"
+              title="Reyting va Yutuqlar (Leaderboard)"
+            >
+              <Trophy size={14} className="text-[#FBBF24]" />
+              <span className="hidden sm:inline">Reyting</span>
+            </button>
+          )}
+
           {onOpenDeckStudio && (
             <button
               type="button"
@@ -95,7 +109,7 @@ export const JoinCreateView: React.FC<JoinCreateViewProps> = ({
               title="Yangi Karta va Falokat Yaratish (Vault-Bek Studio)"
             >
               <Sparkles size={14} />
-              <span className="hidden sm:inline">Karta Studiyasi</span>
+              <span className="hidden sm:inline">Studiy</span>
             </button>
           )}
 
