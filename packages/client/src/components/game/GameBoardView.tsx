@@ -10,6 +10,7 @@ import { VotingPanel } from './VotingPanel';
 import { SimulationView } from './SimulationView';
 import { DisasterModal } from './DisasterModal';
 import { BunkerEventModal } from './BunkerEventModal';
+import { EliminationRevealModal } from './EliminationRevealModal';
 import { sound } from '../../services/sound';
 
 interface FloatingReaction {
@@ -31,6 +32,7 @@ interface GameBoardViewProps {
   onSkipCurrent: () => void;
   onStartRounds: () => void;
   onAcknowledgeEvent: () => void;
+  onContinueFromVoteResults?: () => void;
   onPlayAgain: () => void;
   onLeaveGame: () => void;
 }
@@ -50,6 +52,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
   onSkipCurrent,
   onStartRounds,
   onAcknowledgeEvent,
+  onContinueFromVoteResults,
   onPlayAgain,
   onLeaveGame
 }) => {
@@ -454,6 +457,19 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Post-Elimination Unrevealed Cards Reveal Modal */}
+      {roomState.phase === 'VOTE_RESULTS' && roomState.lastEliminatedPlayer && (
+        <EliminationRevealModal
+          eliminatedPlayer={roomState.lastEliminatedPlayer}
+          isHost={!!isHost}
+          onContinue={() => {
+            if (onContinueFromVoteResults) {
+              onContinueFromVoteResults();
+            }
+          }}
+        />
       )}
 
       {/* Bunker Surprise Discovery Event Modal */}

@@ -4,6 +4,7 @@ import {
   CardCategory, CardItem, PlayerCardSlot, Catastrophe, ShelterSpecs, BunkerEvent
 } from '@boshpana/shared';
 import { CharacterCard } from '../card/CharacterCard';
+import { EliminationRevealModal } from '../game/EliminationRevealModal';
 import { 
   Smartphone, Users, Play, ArrowRight, Eye, EyeOff, 
   RotateCcw, Skull, Trophy, AlertTriangle, Shield, Check, Flame,
@@ -21,14 +22,16 @@ interface OfflinePlayer {
 export const PassAndPlayView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   // Game Steps
   const [step, setStep] = useState<
-    'SETUP' | 'SECRET_PEEK' | 'DISASTER_INTRO' | 'PITCH_SELECTION' | 'PITCH_SPEAKING' | 'TABLE_DEBATE' | 'VOTING' | 'EVENT' | 'FINAL_RESULT'
+    'SETUP' | 'SECRET_PEEK' | 'DISASTER_INTRO' | 'PITCH_SELECTION' | 'PITCH_SPEAKING' | 'TABLE_DEBATE' | 'VOTING' | 'ELIMINATION_REVEAL' | 'EVENT' | 'FINAL_RESULT'
   >('SETUP');
 
   const [playerNames, setPlayerNames] = useState<string[]>(['Ali', 'Vali', 'Guli', 'Sami']);
   const [newPlayerInput, setNewPlayerInput] = useState('');
+  const [isHardcoreSimulation, setIsHardcoreSimulation] = useState(true);
   
   // Game state
   const [players, setPlayers] = useState<OfflinePlayer[]>([]);
+  const [lastEliminatedOfflinePlayer, setLastEliminatedOfflinePlayer] = useState<OfflinePlayer | null>(null);
   const [currentTurnPlayerIndex, setCurrentTurnPlayerIndex] = useState(0);
   const [selectedCardToReveal, setSelectedCardToReveal] = useState<CardCategory | null>(null);
   const [isSecretPeekRevealed, setIsSecretPeekRevealed] = useState(false);
@@ -188,10 +191,23 @@ export const PassAndPlayView: React.FC<{ onExit: () => void }> = ({ onExit }) =>
   // Eliminate player in voting
   const handleEliminatePlayer = (playerId: string) => {
     sound.playElimination();
+    const victim = players.find(p => p.id === playerId);
+    if (victim) {
+      // Reveal all cards of the victim
+      Object.keys(victim.cards).forEach(k => {
+        victim.cards[k as CardCategory].isRevealed = true;
+      });
+      setLastEliminatedOfflinePlayer({ ...victim, isAlive: false });
+    }
+
     const updated = players.map((p) => p.id === playerId ? { ...p, isAlive: false } : p);
     setPlayers(updated);
+    setStep('ELIMINATION_REVEAL');
+  };
 
-    const aliveCount = updated.filter((p) => p.isAlive).length;
+  const handleContinueFromElimination = () => {
+    sound.playClick();
+    const aliveCount = players.filter((p) => p.isAlive).length;
     if (aliveCount <= survivorCount) {
       sound.playVictory();
       setStep('FINAL_RESULT');
@@ -616,7 +632,16 @@ export const PassAndPlayView: React.FC<{ onExit: () => void }> = ({ onExit }) =>
         </div>
       )}
 
-      {/* ================= 8. SURPRISE BUNKER EVENT ================= */}
+      {/* ================= 8. POST-ELIMINATION CARDS REVEAL ================= */}
+      {step === 'ELIMINATION_REVEAL' && lastEliminatedOfflinePlayer && (
+        <EliminationRevealModal
+          eliminatedPlayer={lastEliminatedOfflinePlayer as any}
+          isHost={true}
+          onContinue={handleContinueFromElimination}
+        />
+      )}
+
+      {/* ================= 9. SURPRISE BUNKER EVENT ================= */}
       {step === 'EVENT' && currentEvent && (
         <div className="py-6 space-y-5 animate-fadeIn text-center">
           <div className="p-6 rounded-3xl bg-amber-950/80 border-2 border-amber-500/80 space-y-3 shadow-2xl">

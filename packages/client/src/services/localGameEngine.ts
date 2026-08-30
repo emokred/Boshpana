@@ -39,7 +39,7 @@ export class LocalGameEngine {
     };
 
     this.state = {
-      roomCode,
+      roomCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
       hostId,
       phase: 'LOBBY',
       roundNumber: 1,
@@ -54,6 +54,7 @@ export class LocalGameEngine {
       playerOrder: [],
       settings: defaultSettings,
       eliminatedPlayerIds: [],
+      lastEliminatedPlayer: null,
       survivorPlayerIds: [],
       simulationResult: null,
       chatMessages: []
@@ -344,18 +345,33 @@ export class LocalGameEngine {
       (victim as Player).isAlive = false;
       this.state.eliminatedPlayerIds.push((victim as Player).id);
 
+      // Open ALL unrevealed cards of the eliminated player for everyone to see!
+      Object.keys((victim as Player).cards).forEach(k => {
+        const slotKey = k as CardCategory;
+        if ((victim as Player).cards[slotKey]) {
+          (victim as Player).cards[slotKey].isRevealed = true;
+        }
+      });
+
+      this.state.lastEliminatedPlayer = victim as Player;
+      this.state.phase = 'VOTE_RESULTS';
+
       this.addChatMessage({
         id: Math.random().toString(),
         senderId: 'system',
         senderName: 'TIZIM',
         text: isTie 
-          ? `⚖️ Durang! Tasodifiy tanlov natijasida ${(victim as Player).displayName} boshpanadan chiqarib yuborildi!`
-          : `⚖️ Ko'pchilik ovozi bilan (${maxVotes} ovoz) ${(victim as Player).displayName} boshpanadan chiqarib yuborildi!`,
+          ? `⚖️ Durang! Tasodifiy tanlov natijasida ${(victim as Player).displayName} boshpanadan chiqarib yuborildi! Uning barcha kartalari ochilmoqda...`
+          : `⚖️ Ko'pchilik ovozi bilan (${maxVotes} ovoz) ${(victim as Player).displayName} boshpanadan chiqarib yuborildi! Uning barcha kartalari ochilmoqda...`,
         timestamp: Date.now(),
         isSystem: true
       });
     }
 
+    this.broadcast();
+  }
+
+  public continueFromVoteResults() {
     const remainingAlive = Object.values(this.state.players).filter(p => p.isAlive);
 
     // Check if remaining survivors equal target survivors count!
@@ -397,13 +413,62 @@ export class LocalGameEngine {
     if (this.timerInterval) clearInterval(this.timerInterval);
 
     const survivors = Object.values(this.state.players).filter(p => p.isAlive);
+    
+    // Check if host turned OFF final simulation (Classic Mafia Mode: survival = win!)
+    if (!this.state.settings.finalSimulation) {
+      const result: SimulationResult = {
+        isSuccess: true,
+        survivalScore: 100,
+        mode: 'CLASSIC_MAFIA_SURVIVAL',
+        headline: '🎉 TABRIKLAYMIZ! BOSHPANADA OMON QOLDINGIZ!',
+        detailedStory: `Klassik rejim: ${survivors.length} nafar omon qoluvchi so'nggi ovoz berish raundlaridan muvaffaqiyatli o'tib, boshpanadagi xavfsiz o'rinlarni egalladi. G'alaba!`,
+        breakdown: {
+          foodStatus: 'abundance',
+          healthStatus: 'healthy',
+          technicalStatus: 'flourishing',
+          psychologicalStatus: 'peaceful',
+          defenseStatus: 'secured'
+        },
+        survivors: survivors.map(s => ({
+          id: s.id,
+          displayName: s.displayName,
+          profession: s.cards.profession?.card?.title || 'Kasbi noma\'lum',
+          status: 'Omon qoldi (G\'olib)'
+        }))
+      };
+
+      this.state.simulationResult = result;
+      this.state.phase = 'FINAL_SIMULATION';
+      this.broadcast();
+      return;
+    }
+
+    // Hardcore Simulation Calculation:
     let foodScore = 0;
     let medScore = 0;
     let techScore = 0;
     let defenseScore = 0;
     let psychScore = 0;
 
+    let maleCount = 0;
+    let femaleCount = 0;
+    let hasEmbryos = false;
+
     survivors.forEach(p => {
+      // Check Biology & Gender for reproduction
+      const bioText = ((p.cards.biology?.card?.title || '') + ' ' + (p.cards.biology?.card?.description || '')).toLowerCase();
+      const bagText = ((p.cards.baggage?.card?.title || '') + ' ' + (p.cards.baggage?.card?.description || '')).toLowerCase();
+      
+      if (bioText.includes('ayol') || bioText.includes('qiz') || bioText.includes('female')) {
+        femaleCount++;
+      } else {
+        maleCount++;
+      }
+
+      if (bagText.includes('embrion') || bagText.includes('urug\'') || bagText.includes('genetika') || bagText.includes('inkubator')) {
+        hasEmbryos = true;
+      }
+
       Object.values(p.cards).forEach(slot => {
         if (slot.card?.impactScore) {
           foodScore += slot.card.impactScore.food || 0;
@@ -419,31 +484,71 @@ export class LocalGameEngine {
     const isMedOk = medScore >= 0;
     const isTechOk = techScore >= 0;
     const isPsychOk = psychScore >= 0;
+    const isDefenseOk = defenseScore >= 0;
 
-    const isSuccess = isFoodOk && isMedOk && isTechOk && isPsychOk;
-    const totalScore = 50 + (foodScore + medScore + techScore + defenseScore + psychScore) * 5;
+    // Biology Reproduction Rule:
+    const isReproductionOk = (maleCount > 0 && femaleCount > 0) || hasEmbryos;
+    const reproductionStatus = (maleCount > 0 && femaleCount > 0)
+      ? 'fertile_pair'
+      : hasEmbryos
+      ? 'embryo_bank'
+      : 'failed_single_gender';
+
+    // Global Success Check:
+    const isSuccess = isFoodOk && isMedOk && isTechOk && isPsychOk && isDefenseOk && isReproductionOk;
+
+    let headline = '';
+    let detailedStory = '';
+    let calculatedScore = 0;
+
+    if (isSuccess) {
+      calculatedScore = Math.min(100, Math.max(80, 80 + (foodScore + medScore + techScore + psychScore + defenseScore) * 3));
+      headline = '🎉 BOSHPATHA AHLI OMON QOLDI VA YANGI SIVILIZATSIYANI TIKLADI!';
+      detailedStory = `Mukammal guruh! ${survivors.length} nafar omon qoluvchi professional bilimlari, resurslarni to'g'ri taqsimlashi va nasl davomiyligi (${reproductionStatus === 'embryo_bank' ? 'Embrionlar banki yordamida' : 'Erkak va Ayol juftligi orqali'}) evaziga ${this.state.catastrophe?.shelterMonths || 24} oylik apokalipsisni muvaffaqiyatli yengib o'tdi!`;
+    } else {
+      // Pinpoint exact failure reason and set realistic low score (0-35%)
+      if (!isFoodOk) {
+        calculatedScore = Math.max(5, Math.min(25, 15 + foodScore * 3));
+        headline = '💀 OZUQA TANQISLIGI: OCHLIKDAN HALOK BO\'LDINGIZ...';
+        detailedStory = 'Boshpanada oziq-ovqat va suv ta\'minotini boshqaruvchi mutaxassis bo\'lmagani sababli, 4-oyda zaxira tugab, hamma ochlikdan halok bo\'ldi.';
+      } else if (!isMedOk) {
+        calculatedScore = Math.max(5, Math.min(30, 20 + medScore * 3));
+        headline = '💀 TIBBIY INQIROZ: EPIDEMIYA SABABLI HAMMA HALOK BO\'LDI...';
+        detailedStory = 'Yetarli shifokor va tibbiy jihozlar bo\'lmagani tufayli, bunkerda yuqumli virus tarqaldi va aholi davolanmasdan vafot etdi.';
+      } else if (!isTechOk) {
+        calculatedScore = Math.max(5, Math.min(30, 15 + techScore * 3));
+        headline = '💀 ENERGETIKA HALOKATI: BARCHA TIZIMLAR ISHDAN CHIQDI...';
+        detailedStory = 'Muhandislik va elektr generatorlarini tuzatuvchi mutaxassis yo\'qligi sababli ventilyatsiya to\'xtab, bunker aholisi sovuq va havoning zaharlanishidan halok bo\'ldi.';
+      } else if (!isReproductionOk) {
+        calculatedScore = 40;
+        headline = '⚠️ JINSLAR NOMUTANOSIBLIGI: NASL DAVOM ETMADI...';
+        detailedStory = `Boshpanada omon qolganlarning barchasi bir xil jins vakillari (${maleCount > 0 ? 'faqat Erkaklar' : 'faqat Ayollar'}) bo'lgani va embrionlar banki topilmagani sababli, insoniyat sivilizatsiyasi keyingi avlodga o'tmay tugadi.`;
+      } else {
+        calculatedScore = Math.max(10, Math.min(35, 20 + psychScore * 3));
+        headline = '💀 RUHIY INQIROZ: BOSHPANA ICHIDA ICHKI NIZO CHIQDI...';
+        detailedStory = 'Uzoq yillik yopiq muhitda ruhiy barqarorlik buzilib, omon qoluvchilar o\'rtasidagi kelishmovchiliklar oqibatida bunker barbod bo\'ldi.';
+      }
+    }
 
     const result: SimulationResult = {
       isSuccess,
-      survivalScore: Math.max(10, Math.min(100, totalScore)),
-      headline: isSuccess 
-        ? '🎉 BOSHPATHA AHLI OMON QOLDI VA SIVILIZATSIYANI TIKLADI!' 
-        : '💀 AFSUSKI, BOSHPANA ICHIDAGI INQIROZ SABAB HAMMA HALOK BO\'LDI...',
-      detailedStory: isSuccess
-        ? `Boshpanada to'plangan ${survivors.length} nafar mutaxassis o'zlarining professional bilimlari va oqilona resurs taqsimoti evaziga ${this.state.catastrophe?.shelterMonths || 24} oylik apokalipsisni muvaffaqiyatli yengib o'tishdi.`
-        : `Tashqi apokalipsis xavfi yetmagandek, bunker ichidagi yetishmovchiliklar, epidemiyalar yoki muhim tizimlarning ishdan chiqishi tufayli bunker aholisi qiyin ahvolda qoldi.`,
+      survivalScore: calculatedScore,
+      mode: 'HARDCORE_SIMULATION',
+      reproductionStatus,
+      headline,
+      detailedStory,
       breakdown: {
-        foodStatus: isFoodOk ? 'enough' : 'starvation',
-        healthStatus: isMedOk ? 'healthy' : 'fatal',
-        technicalStatus: isTechOk ? 'flourishing' : 'failing',
+        foodStatus: isFoodOk ? (foodScore > 2 ? 'abundance' : 'enough') : 'starvation',
+        healthStatus: isMedOk ? (medScore > 2 ? 'healthy' : 'illness_treated') : 'epidemic',
+        technicalStatus: isTechOk ? (techScore > 2 ? 'flourishing' : 'repaired') : 'failing',
         psychologicalStatus: isPsychOk ? 'peaceful' : 'civil_war',
-        defenseStatus: defenseScore >= 0 ? 'secured' : 'breached'
+        defenseStatus: isDefenseOk ? 'secured' : 'breached'
       },
       survivors: survivors.map(s => ({
         id: s.id,
         displayName: s.displayName,
         profession: s.cards.profession?.card?.title || 'Kasbi noma\'lum',
-        status: isSuccess ? 'Tirik qoldi (Omon)' : 'Qiyinchilikda halok bo\'ldi'
+        status: isSuccess ? 'Tirik qoldi (Omon)' : 'Inqirozda halok bo\'ldi'
       }))
     };
 

@@ -173,6 +173,7 @@ export const App: React.FC = () => {
           onSkipCurrent={handleSkipCurrent}
           onStartRounds={handleStartRounds}
           onAcknowledgeEvent={handleAcknowledgeEvent}
+          onContinueFromVoteResults={() => engine?.continueFromVoteResults()}
           onPlayAgain={handlePlayAgain}
           onLeaveGame={handleLeaveRoom}
         />

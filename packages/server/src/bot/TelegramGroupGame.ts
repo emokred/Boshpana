@@ -474,10 +474,15 @@ export class TelegramGroupGameManager {
     const victim = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
     victim.isAlive = false;
 
+    const victimCardsSummary = Object.entries(victim.cards)
+      .map(([cat, slot]) => `• <b>[${cat.toUpperCase()}]:</b> ${slot?.card?.title || 'Noma\'lum'}`)
+      .join('\n');
+
     await this.bot.api.sendMessage(
       game.chatId,
       `💀 <b>OVOZ BERISH NATIJASI:</b>\n\n` +
-      `<b>${victim.name}</b> (${victim.cards.profession.card.title}) boshpanadan chiqarib yuborildi!\n\n` +
+      `❌ <b>${victim.name}</b> (${victim.cards.profession?.card?.title || 'Kasbi noma\'lum'}) boshpanadan chiqarib yuborildi!\n\n` +
+      `🔍 <b>Uning barcha yashirin kartalari ochildi:</b>\n${victimCardsSummary}\n\n` +
       `🚪 Boshpana eshiklari yopildi. Qolgan o'yinchilar soni: <b>${alivePlayers.length - 1} kishi</b>.`,
       { parse_mode: 'HTML' }
     );

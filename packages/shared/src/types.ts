@@ -123,6 +123,9 @@ export interface SimulationResult {
   survivalScore: number;
   headline: string;
   detailedStory: string;
+  mode?: 'HARDCORE_SIMULATION' | 'CLASSIC_MAFIA_SURVIVAL';
+  reproductionStatus?: 'fertile_pair' | 'embryo_bank' | 'failed_single_gender' | 'infertile';
+  failureReason?: string;
   breakdown: {
     foodStatus: 'abundance' | 'enough' | 'critical' | 'starvation';
     healthStatus: 'healthy' | 'illness_treated' | 'epidemic' | 'fatal';
@@ -154,6 +157,7 @@ export interface GameRoomState {
   playerOrder: string[];
   settings: RoomSettings;
   eliminatedPlayerIds: string[];
+  lastEliminatedPlayer: Player | null;
   survivorPlayerIds: string[];
   simulationResult: SimulationResult | null;
   chatMessages: {

@@ -96,14 +96,18 @@ export const SimulationView: React.FC<SimulationViewProps> = ({
             </span>
           </div>
 
-          {/* Psychology */}
-          <div className="p-3 rounded-xl bg-bunker-950 border border-slate-800 flex items-center justify-between">
+          {/* Reproduction Tile */}
+          <div className="p-3 rounded-xl bg-bunker-950 border border-slate-800 flex items-center justify-between sm:col-span-2">
             <div className="flex items-center gap-2 text-xs font-medium text-slate-300">
-              <Brain size={15} className="text-purple-400" />
-              <span>Psixologik Muhit:</span>
+              <Users size={15} className="text-pink-400" />
+              <span>Insoniyat Nasli Davomiyligi (Ko'payish):</span>
             </div>
             <span className="text-xs font-mono font-bold text-slate-100 uppercase">
-              {breakdown.psychologicalStatus === 'peaceful' ? '🟢 Tinch' : breakdown.psychologicalStatus === 'tense' ? '🟡 Asabiy' : '🔴 Ichki nizo'}
+              {simulation.reproductionStatus === 'fertile_pair'
+                ? '🟢 Erkak & Ayol Juftligi (Nasl bor)'
+                : simulation.reproductionStatus === 'embryo_bank'
+                ? '🧬 Sun\'iy Embrionlar Banki'
+                : '🔴 Xavf: Bir jinsli guruh (Nasl yo\'q)'}
             </span>
           </div>
         </div>

@@ -68,6 +68,7 @@ export class RoomManager {
       playerOrder: [hostId],
       settings: defaultSettings,
       eliminatedPlayerIds: [],
+      lastEliminatedPlayer: null,
       survivorPlayerIds: [],
       simulationResult: null,
       chatMessages: []
